@@ -324,6 +324,10 @@ sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 init = tf.global_variables_initializer()
 sess.run(init)
 
+# converter = tf.lite.TFLiteConverter.from_session(sess, x, y)
+# tflite_model = converter.convert()
+# open("converted_model.tflite", "wb").write(tflite_model)
+
 saver.save(sess, './model_save/ltsm_model_init', write_meta_graph=True)
 
 # Perform Training steps with "batch_size" amount of example data at each loop
