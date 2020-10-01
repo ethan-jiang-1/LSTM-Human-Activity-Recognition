@@ -1,0 +1,24 @@
+FINAL RESULT: Batch Loss = 0.560582160949707, Accuracy = 0.8968442678451538
+Testing Accuracy: 89.68442678451538%
+
+Precision: 90.02549865224209%
+Recall: 89.68442483881914%
+f1_score: 89.64133430198599%
+
+Confusion Matrix:
+[[468   2  26   0   0   0]
+ [ 24 402  45   0   0   0]
+ [  0   1 419   0   0   0]
+ [  2   3   0 412  68   6]
+ [  0   4   0 122 406   0]
+ [  0   1   0   0   0 536]]
+
+Confusion matrix (normalised to % of total test data):
+[[15.880556    0.06786563  0.88225317  0.          0.          0.        ]
+ [ 0.8143875  13.640991    1.5269766   0.          0.          0.        ]
+ [ 0.          0.03393281 14.217849    0.          0.          0.        ]
+ [ 0.06786563  0.10179844  0.         13.980319    2.3074312   0.20359688]
+ [ 0.          0.13573125  0.          4.1398034  13.776723    0.        ]
+ [ 0.          0.03393281  0.          0.          0.         18.187988  ]]
+Note: training and testing data is not equally distributed amongst classes, 
+so it is normal that more than a 6th of the data is correctly classifier in the last category.

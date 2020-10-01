@@ -1,0 +1,6 @@
+model_checkpoint_path: "ltsm_model_final"
+all_model_checkpoint_paths: "ltsm_model-1400"
+all_model_checkpoint_paths: "ltsm_model-1420"
+all_model_checkpoint_paths: "ltsm_model-1440"
+all_model_checkpoint_paths: "ltsm_model-1460"
+all_model_checkpoint_paths: "ltsm_model_final"
