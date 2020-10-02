@@ -1,0 +1,4 @@
+1) make sure you are using python 3.6 and have tensorflow 1.15.4 installed (not version 2)
+2) run ./run_main.py will train and predict the result based on raw data from acc and gyro
+3) ./run_main.py will save bunch of models during different pharse
+4) pick up on saved model (.pb) and try to convert to tflite.
