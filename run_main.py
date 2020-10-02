@@ -283,8 +283,8 @@ def one_hot(y_, n_classes=n_classes):
 # %%
 
 # Graph input/output
-x = tf.placeholder(tf.float32, [None, n_steps, n_input])
-y = tf.placeholder(tf.float32, [None, n_classes])
+x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="rm_x_input")
+y = tf.placeholder(tf.float32, [None, n_classes], name="rm_y_output")
 
 # Graph weights
 weights = {
@@ -324,24 +324,32 @@ sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 init = tf.global_variables_initializer()
 sess.run(init)
 
-# converter = tf.lite.TFLiteConverter.from_session(sess, x, y)
-# tflite_model = converter.convert()
-# open("converted_model.tflite", "wb").write(tflite_model)
+def save_model(name):
+    import shutil
+    dir_name = "./" + name
+    if os.path.isdir(dir_name):
+        shutil.rmtree(dir_name)
+    tf.saved_model.simple_save(sess, 
+                                 dir_name, 
+                                 inputs={"myinput":x},
+                                 outputs={"myoutputs":y})
 
-saver.save(sess, './model_save/ltsm_model_init', write_meta_graph=True)
+save_model("model_save_init")
+
 
 # Perform Training steps with "batch_size" amount of example data at each loop
 step = 1
+saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
 while step * batch_size <= training_iters:
-    batch_xs =         extract_batch_size(X_train, step, batch_size)
-    batch_ys = one_hot(extract_batch_size(y_train, step, batch_size))
+    batch_xs =       extract_batch_size(X_train, step, batch_size)
+    batch_ys =       extract_batch_size(y_train, step, batch_size)
 
     # Fit training using batch data
     _, loss, acc = sess.run(
         [optimizer, cost, accuracy],
         feed_dict={
             x: batch_xs, 
-            y: batch_ys
+            y: one_hot(batch_ys)
         }
     )
     train_losses.append(loss)
@@ -351,7 +359,7 @@ while step * batch_size <= training_iters:
     if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
         
         # To not spam console, show training accuracy/loss in this "if"
-        print("Training iter #" + str(step*batch_size) +               ":   Batch Loss = " + "{:.6f}".format(loss) +               ", Accuracy = {}".format(acc))
+        print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         
         # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
         loss, acc = sess.run(
@@ -363,12 +371,38 @@ while step * batch_size <= training_iters:
         )
         test_losses.append(loss)
         test_accuracies.append(acc)
-        print("PERFORMANCE ON TEST SET: " +               "Batch Loss = {}".format(loss) +               ", Accuracy = {}".format(acc))
-        saver.save(sess, './model_save/ltsm_model', global_step=step, write_meta_graph=True)
+        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {}".format(loss) + ", Accuracy = {}".format(acc))
+        if step % 100 == 0:
+            saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
+        if step % 400 == 0:
+            save_model("model_save_" + str(step))
+
     step += 1
+    # try:
+    #     graph = sess.graph
+    #     #input_tensor = graph.get_tensor_by_name('rm_x_input:0')
+    #     #output_tensor = graph.get_tensor_by_name('rm_y_output:0')
+    #     input_tensor = batch_xs
+    #     output_tensor = batch_ys_m
+    #     #converter = tf.lite.TFLiteConverter.from_session(sess, [input_tensor], [output_tensor])    
+    #     converter = tf.lite.TFLiteConverter.from_session(sess, input_tensor, output_tensor)    
+    #     tflite_model = converter.convert()
+    #     open("converted_model1.tflite", "wb").write(tflite_model)
+    # except Exception as ex:
+    #     print("\n\n***exception: " + str(ex))
 
 print("Optimization Finished!")
-saver.save(sess, './model_save/ltsm_model_final')
+saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
+save_model("model_save_final")
+# try:
+#     graph = sess.graph
+#     input_tensor = graph.get_tensor_by_name('rm_x_input:0')
+#     output_tensor = graph.get_tensor_by_name('rm_y_output:0')
+#     converter = tf.lite.TFLiteConverter.from_session(sess, [input_tensor], [output_tensor])    
+#     tflite_model = converter.convert()
+#     open("converted_model1.tflite", "wb").write(tflite_model)
+# except Exception as ex:
+#     print("\n\n***exception: " + str(ex))
 
 # Accuracy for test data
 
@@ -383,7 +417,7 @@ one_hot_predictions, accuracy, final_loss = sess.run(
 test_losses.append(final_loss)
 test_accuracies.append(accuracy)
 
-print("FINAL RESULT: " +       "Batch Loss = {}".format(final_loss) +       ", Accuracy = {}".format(accuracy))
+print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
 
 # %% [markdown]
 # ## Training is good, but having visual insight is even better:
@@ -397,7 +431,7 @@ print("FINAL RESULT: " +       "Batch Loss = {}".format(final_loss) +       ", A
 font = {
     'family' : 'Bitstream Vera Sans',
     'weight' : 'bold',
-    'size'   : 18
+    'size'   : 14
 }
 matplotlib.rc('font', **font)
 

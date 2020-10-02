@@ -1,0 +1,26 @@
+2020-10-01 21:55:05.220920: I tensorflow/core/common_runtime/placer.cc:54] Const_2: (Const): /job:localhost/replica:0/task:0/device:CPU:0
+FINAL RESULT: Batch Loss = 0.48867082595825195, Accuracy = 0.9246691465377808
+Testing Accuracy: 92.46691465377808%
+
+Precision: 92.43967655815666%
+Recall: 92.46691550729555%
+f1_score: 92.41259246249675%
+
+Confusion Matrix:
+[[478   2  16   0   0   0]
+ [  4 446  21   0   0   0]
+ [  4   0 416   0   0   0]
+ [  1  16   5 390  79   0]
+ [  2   1   0  71 458   0]
+ [  0   0   0   0   0 537]]
+
+Confusion matrix (normalised to % of total test data):
+[[16.219885    0.06786563  0.542925    0.          0.          0.        ]
+ [ 0.13573125 15.134035    0.7125891   0.          0.          0.        ]
+ [ 0.13573125  0.         14.116051    0.          0.          0.        ]
+ [ 0.03393281  0.542925    0.16966406 13.233797    2.6806922   0.        ]
+ [ 0.06786563  0.03393281  0.          2.4092298  15.541228    0.        ]
+ [ 0.          0.          0.          0.          0.         18.22192   ]]
+Note: training and testing data is not equally distributed amongst classes,
+so it is normal that more than a 6th of the data is correctly classifier in the last category.
+(p36) ➜  LSTM-Human-Activity-Recognition git:(master) ✗
