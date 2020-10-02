@@ -1,7 +1,7 @@
 # To add a new cell, type '# %%'
 # To add a new markdown cell, type '# %% [markdown]'
 # %%
-from IPython import get_ipython
+# from IPython import get_ipython
 
 # %% [markdown]
 # # <a title="Activity Recognition" href="https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition" > LSTMs for Human Activity Recognition</a>
@@ -101,16 +101,16 @@ LABELS = [
 
 DATA_PATH = "data/"
 
-if get_ipython() is not None:
-    get_ipython().system('pwd && ls')
-    os.chdir(DATA_PATH)
-    get_ipython().system('pwd && ls')
+# if get_ipython() is not None:
+#     get_ipython().system('pwd && ls')
+#     os.chdir(DATA_PATH)
+#     get_ipython().system('pwd && ls')
 
-    get_ipython().system('python download_dataset.py')
+#     get_ipython().system('python download_dataset.py')
 
-    get_ipython().system('pwd && ls')
-    os.chdir("..")
-    get_ipython().system('pwd && ls')
+#     get_ipython().system('pwd && ls')
+#     os.chdir("..")
+#     get_ipython().system('pwd && ls')
 
 DATASET_PATH = DATA_PATH + "UCI HAR Dataset/"
 print("\n" + "Dataset is now located at: " + DATASET_PATH)
@@ -139,6 +139,7 @@ def load_X(X_signals_paths):
         file.close()
     
     return np.transpose(np.array(X_signals), (1, 2, 0))
+
 
 X_train_signals_paths = [
     DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES
@@ -170,11 +171,32 @@ def load_y(y_path):
     # Substract 1 to each output class for friendly 0-based indexing 
     return y_ - 1
 
+
 y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
 y_test_path = DATASET_PATH + TEST + "y_test.txt"
-
 y_train = load_y(y_train_path)
 y_test = load_y(y_test_path)
+
+
+# aux functions 
+x = None
+y = None
+def save_model(ses, name):
+    import shutil
+    dir_name = "./" + name
+    if os.path.isdir(dir_name):
+        shutil.rmtree(dir_name)
+    tf.saved_model.simple_save(ses, 
+                                dir_name, 
+                                inputs={"myinput":x},
+                                outputs={"myoutputs":y})
+
+
+def save_model_ses(ses, step):
+    if not os.path.isdir("./model_save_ses"):
+        os.mkdir("./model_save_ses")
+    saver = tf.train.Saver()
+    saver.save(ses, './model_save_ses/model_save' , global_step=step, write_meta_graph=True)
 
 # %% [markdown]
 # ## Additionnal Parameters:
@@ -186,6 +208,7 @@ y_test = load_y(y_test_path)
 # %%
 # Input Data 
 
+
 training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
 test_data_count = len(X_test)  # 2947 testing series
 n_steps = len(X_train[0])  # 128 timesteps per series
@@ -193,7 +216,6 @@ n_input = len(X_train[0][0])  # 9 input parameters per timestep
 
 
 # LSTM Neural Network's internal structure
-
 n_hidden = 32 # Hidden layer num of features
 n_classes = 6 # Total classes (should go up, or should go down)
 
@@ -210,9 +232,37 @@ display_iter = 30000  # To show test set accuracy during training
 # Some debugging info
 
 print("Some useful info to get an insight on dataset's shape and normalisation:")
-print("(X shape, y shape, every X's mean, every X's standard deviation)")
+print("training (X shape, y shape, every X's mean, every X's standard deviation)")
+print(X_train.shape, y_train.shape, np.mean(X_train), np.std(X_train))
+print("test (X shape, y shape, every X's mean, every X's standard deviation)")
 print(X_test.shape, y_test.shape, np.mean(X_test), np.std(X_test))
 print("The dataset is therefore properly normalised, as expected, but not yet one-hot encoded.")
+
+
+def extract_batch_size(_train, step, batch_size):
+    # Function to fetch a "batch_size" amount of data from "(X|y)_train" data. 
+    
+    shape = list(_train.shape)
+    shape[0] = batch_size
+    batch_s = np.empty(shape)
+
+    for i in range(batch_size):
+        # Loop index
+        index = ((step-1)*batch_size + i) % len(_train)
+        batch_s[i] = _train[index] 
+
+    return batch_s
+
+
+def one_hot(y_, n_classes=n_classes):
+    # Function to encode neural one-hot output labels from number indexes 
+    # e.g.: 
+    # one_hot(y_=[[5], [0], [3]], n_classes=6):
+    #     return [[0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]]
+    
+    y_ = y_.reshape(len(y_))
+    return np.eye(n_classes)[np.array(y_, dtype=np.int32)]  # Returns FLOATS
+
 
 # %% [markdown]
 # ## Utility functions for training:
@@ -252,39 +302,13 @@ def LSTM_RNN(_X, _weights, _biases):
     # Linear activation
     return tf.matmul(lstm_last_output, _weights['out']) + _biases['out']
 
-
-def extract_batch_size(_train, step, batch_size):
-    # Function to fetch a "batch_size" amount of data from "(X|y)_train" data. 
-    
-    shape = list(_train.shape)
-    shape[0] = batch_size
-    batch_s = np.empty(shape)
-
-    for i in range(batch_size):
-        # Loop index
-        index = ((step-1)*batch_size + i) % len(_train)
-        batch_s[i] = _train[index] 
-
-    return batch_s
-
-
-def one_hot(y_, n_classes=n_classes):
-    # Function to encode neural one-hot output labels from number indexes 
-    # e.g.: 
-    # one_hot(y_=[[5], [0], [3]], n_classes=6):
-    #     return [[0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]]
-    
-    y_ = y_.reshape(len(y_))
-    return np.eye(n_classes)[np.array(y_, dtype=np.int32)]  # Returns FLOATS
-
 # %% [markdown]
 # ## Let's get serious and build the neural network:
 
-# %%
 
 # Graph input/output
-x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="rm_x_input")
-y = tf.placeholder(tf.float32, [None, n_classes], name="rm_y_output")
+x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="rm_x_input")  # 128 steps 9 input
+y = tf.placeholder(tf.float32, [None, n_classes], name="rm_y_output") # 6 classified result
 
 # Graph weights
 weights = {
@@ -299,50 +323,36 @@ biases = {
 pred = LSTM_RNN(x, weights, biases)
 
 # Loss, optimizer and evaluation
-l2 = lambda_loss_amount * sum(
-    tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()
-) # L2 loss prevents this overkill neural network to overfit the data
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + l2 # Softmax loss
+_l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
+
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + _l2 # Softmax loss
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
 
-correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+_correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
+accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
 
 # %% [markdown]
 # ## Hooray, now train the neural network:
 
 # %%
 # To keep track of training's performance
-test_losses = []
-test_accuracies = []
-train_losses = []
-train_accuracies = []
-
-saver = tf.train.Saver()
 # Launch the graph
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 init = tf.global_variables_initializer()
 sess.run(init)
 
-def save_model(name):
-    import shutil
-    dir_name = "./" + name
-    if os.path.isdir(dir_name):
-        shutil.rmtree(dir_name)
-    tf.saved_model.simple_save(sess, 
-                                 dir_name, 
-                                 inputs={"myinput":x},
-                                 outputs={"myoutputs":y})
-
-save_model("model_save_init")
-
+test_losses = []
+test_accuracies = []
+train_losses = []
+train_accuracies = []
 
 # Perform Training steps with "batch_size" amount of example data at each loop
 step = 1
-saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
+save_model_ses(sess, step)
+save_model(sess, "model_save_init")
 while step * batch_size <= training_iters:
-    batch_xs =       extract_batch_size(X_train, step, batch_size)
-    batch_ys =       extract_batch_size(y_train, step, batch_size)
+    batch_xs = extract_batch_size(X_train, step, batch_size)
+    batch_ys = extract_batch_size(y_train, step, batch_size)
 
     # Fit training using batch data
     _, loss, acc = sess.run(
@@ -373,36 +383,17 @@ while step * batch_size <= training_iters:
         test_accuracies.append(acc)
         print("PERFORMANCE ON TEST SET: " + "Batch Loss = {}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 100 == 0:
-            saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
+            save_model_ses(sess, step)
         if step % 400 == 0:
-            save_model("model_save_" + str(step))
+            save_model(sess, "model_save_" + str(step))
 
     step += 1
-    # try:
-    #     graph = sess.graph
-    #     #input_tensor = graph.get_tensor_by_name('rm_x_input:0')
-    #     #output_tensor = graph.get_tensor_by_name('rm_y_output:0')
-    #     input_tensor = batch_xs
-    #     output_tensor = batch_ys_m
-    #     #converter = tf.lite.TFLiteConverter.from_session(sess, [input_tensor], [output_tensor])    
-    #     converter = tf.lite.TFLiteConverter.from_session(sess, input_tensor, output_tensor)    
-    #     tflite_model = converter.convert()
-    #     open("converted_model1.tflite", "wb").write(tflite_model)
-    # except Exception as ex:
-    #     print("\n\n***exception: " + str(ex))
+
 
 print("Optimization Finished!")
-saver.save(sess, './model_save/model_save', global_step=step, write_meta_graph=True)
-save_model("model_save_final")
-# try:
-#     graph = sess.graph
-#     input_tensor = graph.get_tensor_by_name('rm_x_input:0')
-#     output_tensor = graph.get_tensor_by_name('rm_y_output:0')
-#     converter = tf.lite.TFLiteConverter.from_session(sess, [input_tensor], [output_tensor])    
-#     tflite_model = converter.convert()
-#     open("converted_model1.tflite", "wb").write(tflite_model)
-# except Exception as ex:
-#     print("\n\n***exception: " + str(ex))
+save_model_ses(sess, step)
+save_model(sess, "model_save_final")
+
 
 # Accuracy for test data
 
@@ -418,6 +409,9 @@ test_losses.append(final_loss)
 test_accuracies.append(accuracy)
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
+
+save_model(sess, "model_save_pred")
+
 
 # %% [markdown]
 # ## Training is good, but having visual insight is even better:
@@ -440,14 +434,14 @@ height = 12
 plt.figure(figsize=(width, height))
 
 indep_train_axis = np.array(range(batch_size, (len(train_losses)+1)*batch_size, batch_size))
-plt.plot(indep_train_axis, np.array(train_losses),     "b--", label="Train losses")
+plt.plot(indep_train_axis, np.array(train_losses), "b--", label="Train losses")
 plt.plot(indep_train_axis, np.array(train_accuracies), "g--", label="Train accuracies")
 
 indep_test_axis = np.append(
     np.array(range(batch_size, len(test_losses)*display_iter, display_iter)[:-1]),
     [training_iters]
 )
-plt.plot(indep_test_axis, np.array(test_losses),     "b-", label="Test losses")
+plt.plot(indep_test_axis, np.array(test_losses), "b-", label="Test losses")
 plt.plot(indep_test_axis, np.array(test_accuracies), "g-", label="Test accuracies")
 
 plt.title("Training session's progress over iterations")
@@ -584,5 +578,3 @@ sess.close()
 # Let's convert this notebook to a README automatically for the GitHub project's title page:
 #get_ipython().system('jupyter nbconvert --to markdown LSTM.ipynb')
 #get_ipython().system('mv LSTM.md README.md')
-
-

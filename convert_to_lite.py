@@ -7,6 +7,7 @@ import tensorflow as tf
 # tflite_model = converter.convert()
 
 # Converting a SavedModel.
-converter = tf.lite.TFLiteConverter.from_saved_model("./model_save_200")
+converter = tf.lite.TFLiteConverter.from_saved_model("./model_save_400")
+converter.allow_custom_ops = True
 tflite_model = converter.convert()
 open("converted_model.tflite", "wb").write(tflite_model)
