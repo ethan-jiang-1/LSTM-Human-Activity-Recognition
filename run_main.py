@@ -178,18 +178,35 @@ y_train = load_y(y_train_path)
 y_test = load_y(y_test_path)
 
 
-# aux functions 
+# input/output graph??
 x = None
 y = None
-def save_model(ses, name):
+
+# aux functions 
+import traceback 
+def save_model(ses, name, cx=None, cy=None):
     import shutil
     dir_name = "./" + name
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
-    tf.saved_model.simple_save(ses, 
-                                dir_name, 
-                                inputs={"myinput":x},
-                                outputs={"myoutputs":y})
+    fx = x 
+    if cx is not None:
+        fx = cx 
+    fy = y
+    if cy is not None:
+        fy = cy
+    try:
+        print("shapes: fx: {} fy: {}".format(fx.shape, fy.shape)) 
+        tf.saved_model.simple_save(ses, 
+                                    dir_name, 
+                                    inputs={"myinput": fx},
+                                    outputs={"myoutputs": fy})
+        print("\n\n**model saved.")
+        return True
+    except Exception as ex:
+        print("\n\n**model failed to saved: {}".format(ex))
+        traceback.print_exc()
+    return False
 
 
 def save_model_ses(ses, step):
@@ -353,13 +370,14 @@ save_model(sess, "model_save_init")
 while step * batch_size <= training_iters:
     batch_xs = extract_batch_size(X_train, step, batch_size)
     batch_ys = extract_batch_size(y_train, step, batch_size)
+    batch_ys_oh = one_hot(batch_ys)
 
     # Fit training using batch data
     _, loss, acc = sess.run(
         [optimizer, cost, accuracy],
         feed_dict={
             x: batch_xs, 
-            y: one_hot(batch_ys)
+            y: batch_ys_oh
         }
     )
     train_losses.append(loss)
@@ -370,6 +388,9 @@ while step * batch_size <= training_iters:
         
         # To not spam console, show training accuracy/loss in this "if"
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
+        if step % 100 == 0:
+            if not save_model(sess, "model_save_" + str(step), cx=batch_xs, cy=batch_ys_oh):
+                save_model(sess, "model_save_" + str(step), cx=batch_xs, cy=batch_ys)
         
         # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
         loss, acc = sess.run(
@@ -384,8 +405,6 @@ while step * batch_size <= training_iters:
         print("PERFORMANCE ON TEST SET: " + "Batch Loss = {}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 100 == 0:
             save_model_ses(sess, step)
-        if step % 400 == 0:
-            save_model(sess, "model_save_" + str(step))
 
     step += 1
 
