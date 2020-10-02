@@ -64,6 +64,10 @@ from sklearn import metrics
 
 import os
 
+# from functools import partial
+# import numpy as np
+# array32 = partial(np.array, dtype=np.float32)
+
 #import tensorflow.compat.v1 as tf
 #tf.disable_v2_behavior()
 
@@ -182,25 +186,28 @@ y_test = load_y(y_test_path)
 x = None
 y = None
 
+def addNameToTensor(someTensor, theName):
+    return tf.identity(someTensor, name=theName)
+
 # aux functions 
 import traceback 
-def save_model(ses, name, cx=None, cy=None):
+def save_model(ses, step, name, nx=None, ny=None):
     import shutil
     dir_name = "./" + name
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
-    fx = x 
-    if cx is not None:
-        fx = cx 
-    fy = y
-    if cy is not None:
-        fy = cy
+    tx = x 
+    if nx is not None:
+        tx = addNameToTensor(nx, "rm_x_input_" + str(step))
+    ty = y
+    if ny is not None:
+        ty = addNameToTensor(ny, "rm_y_output_" + str(step))     
     try:
-        print("shapes: fx: {} fy: {}".format(fx.shape, fy.shape)) 
+        #print("shapes: fx: {} fy: {}".format(tx.shape, ty.shape)) 
         tf.saved_model.simple_save(ses, 
                                     dir_name, 
-                                    inputs={"myinput": fx},
-                                    outputs={"myoutputs": fy})
+                                    inputs={"myinput": tx},
+                                    outputs={"myoutputs": ty})
         print("\n\n**model saved.")
         return True
     except Exception as ex:
@@ -366,7 +373,7 @@ train_accuracies = []
 # Perform Training steps with "batch_size" amount of example data at each loop
 step = 1
 save_model_ses(sess, step)
-save_model(sess, "model_save_init")
+save_model(sess, step, "model_save_init")
 while step * batch_size <= training_iters:
     batch_xs = extract_batch_size(X_train, step, batch_size)
     batch_ys = extract_batch_size(y_train, step, batch_size)
@@ -388,9 +395,8 @@ while step * batch_size <= training_iters:
         
         # To not spam console, show training accuracy/loss in this "if"
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
-        if step % 100 == 0:
-            if not save_model(sess, "model_save_" + str(step), cx=batch_xs, cy=batch_ys_oh):
-                save_model(sess, "model_save_" + str(step), cx=batch_xs, cy=batch_ys)
+        if step % 400 == 100:
+            save_model(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
         
         # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
         loss, acc = sess.run(
@@ -411,7 +417,7 @@ while step * batch_size <= training_iters:
 
 print("Optimization Finished!")
 save_model_ses(sess, step)
-save_model(sess, "model_save_final")
+save_model(sess, step + 1,  "model_save_final")
 
 
 # Accuracy for test data
@@ -429,7 +435,7 @@ test_accuracies.append(accuracy)
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
 
-save_model(sess, "model_save_pred")
+save_model(sess, step + 2, "model_save_pred")
 
 
 # %% [markdown]
