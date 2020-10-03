@@ -189,6 +189,7 @@ y = None
 def addNameToTensor(someTensor, theName):
     return tf.identity(someTensor, name=theName)
 
+
 # aux functions 
 import traceback 
 def save_model(ses, step, name, nx=None, ny=None):
@@ -268,7 +269,7 @@ def extract_batch_size(_train, step, batch_size):
     
     shape = list(_train.shape)
     shape[0] = batch_size
-    batch_s = np.empty(shape)
+    batch_s = np.empty(shape, dtype=np.float32)
 
     for i in range(batch_size):
         # Loop index
@@ -285,7 +286,7 @@ def one_hot(y_, n_classes=n_classes):
     #     return [[0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 0, 0]]
     
     y_ = y_.reshape(len(y_))
-    return np.eye(n_classes)[np.array(y_, dtype=np.int32)]  # Returns FLOATS
+    return np.eye(n_classes, dtype=np.int32)[np.array(y_, dtype=np.int32)]  # Returns FLOATS
 
 
 # %% [markdown]
@@ -329,6 +330,7 @@ def LSTM_RNN(_X, _weights, _biases):
 # %% [markdown]
 # ## Let's get serious and build the neural network:
 
+tf.enable_resource_variables()
 
 # Graph input/output
 x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="rm_x_input")  # 128 steps 9 input
@@ -361,7 +363,7 @@ accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
 # %%
 # To keep track of training's performance
 # Launch the graph
-sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
+sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
 init = tf.global_variables_initializer()
 sess.run(init)
 
@@ -417,7 +419,7 @@ while step * batch_size <= training_iters:
 
 print("Optimization Finished!")
 save_model_ses(sess, step)
-save_model(sess, step + 1,  "model_save_final")
+save_model(sess, step + 1, "model_save_final")
 
 
 # Accuracy for test data
@@ -450,7 +452,7 @@ save_model(sess, step + 2, "model_save_pred")
 font = {
     'family' : 'Bitstream Vera Sans',
     'weight' : 'bold',
-    'size'   : 14
+    'size'   : 12
 }
 matplotlib.rc('font', **font)
 
