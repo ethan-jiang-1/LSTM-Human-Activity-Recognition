@@ -9,6 +9,7 @@ def inspect(tobj, mark):
     else:
         print("object is not tf object")
 
+
 # Tensor('Const:0' shape=(6, 2) dtype=int32)
 my_tensor = tf.constant(0, shape=[6, 2])
 inspect(my_tensor, "my_tensor")

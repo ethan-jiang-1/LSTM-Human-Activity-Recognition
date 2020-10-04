@@ -6,7 +6,7 @@ from sklearn import metrics
 
 import os
 
-from s_console_prompt import *
+from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all
 # load dataset from data_loader
 dh = load_all()
@@ -40,6 +40,7 @@ def addNameToTensor(someTensor, theName):
 import traceback 
 def save_model(ses, step, name, nx=None, ny=None):
     import shutil
+    from s_simple_save import simple_save_ex
     dir_name = "./" + name
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
@@ -51,10 +52,14 @@ def save_model(ses, step, name, nx=None, ny=None):
         ty = addNameToTensor(ny, "my_y_output_" + str(step))     
     try:
         inspect_graph("saved_model")
-        tf.saved_model.simple_save(ses, 
-                                    dir_name, 
-                                    inputs={"my_inputs": tx},
-                                    outputs={"my_outputs": ty})
+        # tf.saved_model.simple_save(ses, 
+        #                             dir_name, 
+        #                             inputs={"my_inputs": tx},
+        #                             outputs={"my_outputs": ty})
+        simple_save_ex(ses,
+                    dir_name,
+                    inputs={"my_inputs": tx},
+                    outputs={"my_outputs": ty})        
         prompt_green("\n\n**model {} saved.".format(step))
         return True
     except Exception as ex:
@@ -70,7 +75,9 @@ def save_model_ses(ses, step):
         inspect_graph("saved_model_ses")
         saver = tf.train.Saver()
         saver.save(ses, './model_save_ses/model_save' , global_step=step, write_meta_graph=True)
-        prompt_green("**model_ses {} saved".format(step))
+        tf.train.write_graph(ses.graph_def, '', './model_save_ses/model_save-{}.pb'.format(step), as_text=False)
+        prompt_green(
+            "**model_ses {} saved, graph_op_len: {}".format(step, len(graph.get_operations())))
         return True
     except Exception as ex:
         prompt_red("**model_ses {} failed to saved {}".format(step, ex))
@@ -258,6 +265,8 @@ while step * batch_size <= training_iters:
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 400 == 100:
             save_model(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
+        if step % 100 == 0:
+            save_model_ses(sess, step)
         
         # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
         loss, acc = sess.run(
@@ -269,9 +278,7 @@ while step * batch_size <= training_iters:
         )
         test_losses.append(loss)
         test_accuracies.append(acc)
-        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {}".format(loss) + ", Accuracy = {}".format(acc))
-        if step % 100 == 0:
-            save_model_ses(sess, step)
+        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
 
     step += 1
 

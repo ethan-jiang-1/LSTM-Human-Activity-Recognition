@@ -17,7 +17,7 @@ def do_load_model(name):
             return False
 
         dir_name = "./" + model_name
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         
         sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
         init = tf.global_variables_initializer()
@@ -26,6 +26,7 @@ def do_load_model(name):
         tags = []
 
         model = tf.saved_model.load(sess, tags, dir_name)
+        print(model)
         return True
 
     except Exception as ex:
