@@ -1,61 +1,3 @@
-# To add a new cell, type '# %%'
-# To add a new markdown cell, type '# %% [markdown]'
-# %%
-# from IPython import get_ipython
-
-# %% [markdown]
-# # <a title="Activity Recognition" href="https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition" > LSTMs for Human Activity Recognition</a>
-# 
-# Human Activity Recognition (HAR) using smartphones dataset and an LSTM RNN. Classifying the type of movement amongst six categories:
-# - WALKING,
-# - WALKING_UPSTAIRS,
-# - WALKING_DOWNSTAIRS,
-# - SITTING,
-# - STANDING,
-# - LAYING.
-# 
-# Compared to a classical approach, using a Recurrent Neural Networks (RNN) with Long Short-Term Memory cells (LSTMs) require no or almost no feature engineering. Data can be fed directly into the neural network who acts like a black box, modeling the problem correctly. [Other research](https://archive.ics.uci.edu/ml/machine-learning-databases/00240/UCI%20HAR%20Dataset.names) on the activity recognition dataset can use a big amount of feature engineering, which is rather a signal processing approach combined with classical data science techniques. The approach here is rather very simple in terms of how much was the data preprocessed. 
-# 
-# Let's use Google's neat Deep Learning library, TensorFlow, demonstrating the usage of an LSTM, a type of Artificial Neural Network that can process sequential data / time series. 
-# 
-# ## Video dataset overview
-# 
-# Follow this link to see a video of the 6 activities recorded in the experiment with one of the participants:
-# 
-# <p align="center">
-#   <a href="http://www.youtube.com/watch?feature=player_embedded&v=XOEN9W05_4A
-# " target="_blank"><img src="http://img.youtube.com/vi/XOEN9W05_4A/0.jpg" 
-# alt="Video of the experiment" width="400" height="300" border="10" /></a>
-#   <a href="https://youtu.be/XOEN9W05_4A"><center>[Watch video]</center></a>
-# </p>
-# 
-# ## Details about the input data
-# 
-# I will be using an LSTM on the data to learn (as a cellphone attached on the waist) to recognise the type of activity that the user is doing. The dataset's description goes like this:
-# 
-# > The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. 
-# 
-# That said, I will use the almost raw data: only the gravity effect has been filtered out of the accelerometer  as a preprocessing step for another 3D feature as an input to help learning. If you'd ever want to extract the gravity by yourself, you could fork my code on using a [Butterworth Low-Pass Filter (LPF) in Python](https://github.com/guillaume-chevalier/filtering-stft-and-laplace-transform) and edit it to have the right cutoff frequency of 0.3 Hz which is a good frequency for activity recognition from body sensors.
-# 
-# ## What is an RNN?
-# 
-# As explained in [this article](http://karpathy.github.io/2015/05/21/rnn-effectiveness/), an RNN takes many input vectors to process them and output other vectors. It can be roughly pictured like in the image below, imagining each rectangle has a vectorial depth and other special hidden quirks in the image below. **In our case, the "many to one" architecture is used**: we accept time series of [feature vectors](https://www.quora.com/What-do-samples-features-time-steps-mean-in-LSTM/answer/Guillaume-Chevalier-2) (one vector per [time step](https://www.quora.com/What-do-samples-features-time-steps-mean-in-LSTM/answer/Guillaume-Chevalier-2)) to convert them to a probability vector at the output for classification. Note that a "one to one" architecture would be a standard feedforward neural network. 
-# 
-# > <a href="http://karpathy.github.io/2015/05/21/rnn-effectiveness/" ><img src="http://karpathy.github.io/assets/rnn/diags.jpeg" /></a>
-# > http://karpathy.github.io/2015/05/21/rnn-effectiveness/
-# 
-# ## What is an LSTM?
-# 
-# An LSTM is an improved RNN. It is more complex, but easier to train, avoiding what is called the vanishing gradient problem. I recommend [this article](http://colah.github.io/posts/2015-08-Understanding-LSTMs/) for you to learn more on LSTMs.
-# 
-# 
-# ## Results 
-# 
-# Scroll on! Nice visuals awaits. 
-
-# %%
-# All Includes
-
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -64,122 +6,26 @@ from sklearn import metrics
 
 import os
 
-# from functools import partial
-# import numpy as np
-# array32 = partial(np.array, dtype=np.float32)
+from s_console_prompt import *
+from s_data_loader import load_all
+# load dataset from data_loader
+dh = load_all()
+X_train = dh.X_train
+X_test = dh.X_test
+y_train = dh.y_train
+y_test = dh.y_test
+LABELS = dh.LABELS
 
-#import tensorflow.compat.v1 as tf
-#tf.disable_v2_behavior()
+# tf.enable_resource_variables()
+graph = tf.get_default_graph()
 
-# %%
-# Useful Constants
-
-# Those are separate normalised input features for the neural network
-INPUT_SIGNAL_TYPES = [
-    "body_acc_x_",
-    "body_acc_y_",
-    "body_acc_z_",
-    "body_gyro_x_",
-    "body_gyro_y_",
-    "body_gyro_z_",
-    "total_acc_x_",
-    "total_acc_y_",
-    "total_acc_z_"
-]
-
-# Output classes to learn how to classify
-LABELS = [
-    "WALKING", 
-    "WALKING_UPSTAIRS", 
-    "WALKING_DOWNSTAIRS", 
-    "SITTING", 
-    "STANDING", 
-    "LAYING"
-] 
-
-# %% [markdown]
-# ## Let's start by downloading the data: 
-
-# %%
-# Note: Linux bash commands start with a "!" inside those "ipython notebook" cells
-
-DATA_PATH = "data/"
-
-# if get_ipython() is not None:
-#     get_ipython().system('pwd && ls')
-#     os.chdir(DATA_PATH)
-#     get_ipython().system('pwd && ls')
-
-#     get_ipython().system('python download_dataset.py')
-
-#     get_ipython().system('pwd && ls')
-#     os.chdir("..")
-#     get_ipython().system('pwd && ls')
-
-DATASET_PATH = DATA_PATH + "UCI HAR Dataset/"
-print("\n" + "Dataset is now located at: " + DATASET_PATH)
-
-# %% [markdown]
-# ## Preparing dataset:
-
-# %%
-TRAIN = "train/"
-TEST = "test/"
-
-
-# Load "X" (the neural network's training and testing inputs)
-
-def load_X(X_signals_paths):
-    X_signals = []
-    
-    for signal_type_path in X_signals_paths:
-        file = open(signal_type_path, 'r')
-        # Read dataset from disk, dealing with text files' syntax
-        X_signals.append(
-            [np.array(serie, dtype=np.float32) for serie in [
-                row.replace('  ', ' ').strip().split(' ') for row in file
-            ]]
-        )
-        file.close()
-    
-    return np.transpose(np.array(X_signals), (1, 2, 0))
-
-
-X_train_signals_paths = [
-    DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES
-]
-X_test_signals_paths = [
-    DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES
-]
-print("X_train_signals_paths: {}".format(X_train_signals_paths))
-print("X_test_signals_paths: {}".format(X_test_signals_paths))
-
-X_train = load_X(X_train_signals_paths)
-X_test = load_X(X_test_signals_paths)
-# print("x_train: {}".format(X_train))
-# print("x_test: {}".format(X_test))
-
-# Load "y" (the neural network's training and testing outputs)
-
-def load_y(y_path):
-    file = open(y_path, 'r')
-    # Read dataset from disk, dealing with text file's syntax
-    y_ = np.array(
-        [elem for elem in [
-            row.replace('  ', ' ').strip().split(' ') for row in file
-        ]], 
-        dtype=np.int32
-    )
-    file.close()
-    
-    # Substract 1 to each output class for friendly 0-based indexing 
-    return y_ - 1
-
-
-y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
-y_test_path = DATASET_PATH + TEST + "y_test.txt"
-y_train = load_y(y_train_path)
-y_test = load_y(y_test_path)
+def inspect_graph(mark):
+    if False:
+        if mark is not None:
+            prompt_yellow(mark)
+        for op in graph.get_operations():
+            if op.name.find("my_") == 0:
+                prompt_blue(op.name, op.type, op.values())
 
 
 # input/output graph??
@@ -199,20 +45,20 @@ def save_model(ses, step, name, nx=None, ny=None):
         shutil.rmtree(dir_name)
     tx = x 
     if nx is not None:
-        tx = addNameToTensor(nx, "rm_x_input_" + str(step))
+        tx = addNameToTensor(nx, "my_x_input_" + str(step))
     ty = y
     if ny is not None:
-        ty = addNameToTensor(ny, "rm_y_output_" + str(step))     
+        ty = addNameToTensor(ny, "my_y_output_" + str(step))     
     try:
-        #print("shapes: fx: {} fy: {}".format(tx.shape, ty.shape)) 
+        inspect_graph("saved_model")
         tf.saved_model.simple_save(ses, 
                                     dir_name, 
-                                    inputs={"myinput": tx},
-                                    outputs={"myoutputs": ty})
-        print("\n\n**model saved.")
+                                    inputs={"my_inputs": tx},
+                                    outputs={"my_outputs": ty})
+        prompt_green("\n\n**model {} saved.".format(step))
         return True
     except Exception as ex:
-        print("\n\n**model failed to saved: {}".format(ex))
+        prompt_red("\n\n**model {} failed to saved: {}".format(step, ex))
         traceback.print_exc()
     return False
 
@@ -220,8 +66,17 @@ def save_model(ses, step, name, nx=None, ny=None):
 def save_model_ses(ses, step):
     if not os.path.isdir("./model_save_ses"):
         os.mkdir("./model_save_ses")
-    saver = tf.train.Saver()
-    saver.save(ses, './model_save_ses/model_save' , global_step=step, write_meta_graph=True)
+    try:
+        inspect_graph("saved_model_ses")
+        saver = tf.train.Saver()
+        saver.save(ses, './model_save_ses/model_save' , global_step=step, write_meta_graph=True)
+        prompt_green("**model_ses {} saved".format(step))
+        return True
+    except Exception as ex:
+        prompt_red("**model_ses {} failed to saved {}".format(step, ex))
+        traceback.print_exc()
+    return False
+
 
 # %% [markdown]
 # ## Additionnal Parameters:
@@ -327,14 +182,16 @@ def LSTM_RNN(_X, _weights, _biases):
     # Linear activation
     return tf.matmul(lstm_last_output, _weights['out']) + _biases['out']
 
+
 # %% [markdown]
 # ## Let's get serious and build the neural network:
+inspect_graph("start")
 
-tf.enable_resource_variables()
 
 # Graph input/output
-x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="rm_x_input")  # 128 steps 9 input
-y = tf.placeholder(tf.float32, [None, n_classes], name="rm_y_output") # 6 classified result
+x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")  # 128 steps 9 input
+y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output") # 6 classified result
+inspect_graph("input/output graph")
 
 # Graph weights
 weights = {
@@ -363,9 +220,11 @@ accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
 # %%
 # To keep track of training's performance
 # Launch the graph
+inspect_graph("before_init")
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
 init = tf.global_variables_initializer()
 sess.run(init)
+inspect_graph("after_init")
 
 test_losses = []
 test_accuracies = []
@@ -500,7 +359,7 @@ print(confusion_matrix)
 normalised_confusion_matrix = np.array(confusion_matrix, dtype=np.float32)/np.sum(confusion_matrix)*100
 
 print("")
-print("Confusion matrix (normalised to % of total test data):")
+print("Confusion matrix (normalised to {} of total test data):".format(len(X_test)))
 print(normalised_confusion_matrix)
 print("Note: training and testing data is not equally distributed amongst classes, ")
 print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
@@ -525,83 +384,4 @@ plt.xlabel('Predicted label')
 plt.show()
 
 
-# %%
 sess.close()
-
-# %% [markdown]
-# ## Conclusion
-# 
-# Outstandingly, **the final accuracy is of 91%**! And it can peak to values such as 93.25%, at some moments of luck during the training, depending on how the neural network's weights got initialized at the start of the training, randomly. 
-# 
-# This means that the neural networks is almost always able to correctly identify the movement type! Remember, the phone is attached on the waist and each series to classify has just a 128 sample window of two internal sensors (a.k.a. 2.56 seconds at 50 FPS), so it amazes me how those predictions are extremely accurate given this small window of context and raw data. I've validated and re-validated that there is no important bug, and the community used and tried this code a lot. (Note: be sure to report something in the issue tab if you find bugs, otherwise [Quora](https://www.quora.com/), [StackOverflow](https://stackoverflow.com/questions/tagged/tensorflow?sort=votes&pageSize=50), and other [StackExchange](https://stackexchange.com/sites#science) sites are the places for asking questions.)
-# 
-# I specially did not expect such good results for guessing between the labels "SITTING" and "STANDING". Those are seemingly almost the same thing from the point of view of a device placed at waist level according to how the dataset was originally gathered. Thought, it is still possible to see a little cluster on the matrix between those classes, which drifts away just a bit from the identity. This is great.
-# 
-# It is also possible to see that there was a slight difficulty in doing the difference between "WALKING", "WALKING_UPSTAIRS" and "WALKING_DOWNSTAIRS". Obviously, those activities are quite similar in terms of movements. 
-# 
-# I also tried my code without the gyroscope, using only the 3D accelerometer's 6 features (and not changing the training hyperparameters), and got an accuracy of 87%. In general, gyroscopes consumes more power than accelerometers, so it is preferable to turn them off. 
-# 
-# 
-# ## Improvements
-# 
-# In [another open-source repository of mine](https://github.com/guillaume-chevalier/HAR-stacked-residual-bidir-LSTMs), the accuracy is pushed up to nearly 94% using a special deep LSTM architecture which combines the concepts of bidirectional RNNs, residual connections, and stacked cells. This architecture is also tested on another similar activity dataset. It resembles the nice architecture used in "[Google’s Neural Machine Translation System: Bridging the Gap between Human and Machine Translation](https://arxiv.org/pdf/1609.08144.pdf)", without an attention mechanism, and with just the encoder part - as a "many to one" architecture instead of a "many to many" to be adapted to the Human Activity Recognition (HAR) problem. I also worked more on the problem and came up with the [LARNN](https://github.com/guillaume-chevalier/Linear-Attention-Recurrent-Neural-Network), however it's complicated for just a little gain. Thus the current, original activity recognition project is simply better to use for its outstanding simplicity. 
-# 
-# If you want to learn more about deep learning, I have also built a list of the learning ressources for deep learning which have revealed to be the most useful to me [here](https://github.com/guillaume-chevalier/Awesome-Deep-Learning-Resources). 
-# 
-# 
-# ## References
-# 
-# The [dataset](https://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones) can be found on the UCI Machine Learning Repository: 
-# 
-# > Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. A Public Domain Dataset for Human Activity Recognition Using Smartphones. 21th European Symposium on Artificial Neural Networks, Computational Intelligence and Machine Learning, ESANN 2013. Bruges, Belgium 24-26 April 2013.
-# 
-# The RNN image for "many-to-one" is taken from Karpathy's post: 
-# 
-# > Andrej Karpathy, The Unreasonable Effectiveness of Recurrent Neural Networks, 2015, 
-# > http://karpathy.github.io/2015/05/21/rnn-effectiveness/
-# 
-# ## Citation
-# 
-# Copyright (c) 2016 Guillaume Chevalier. To cite my code, you can point to the URL of the GitHub repository, for example: 
-# 
-# > Guillaume Chevalier, LSTMs for Human Activity Recognition, 2016, 
-# > https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition
-# 
-# My code is available for free and even for private usage for anyone under the [MIT License](https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition/blob/master/LICENSE), however I ask to cite for using the code. 
-# 
-# Here is the BibTeX citation code: 
-# ```
-# @misc{chevalier2016lstms,
-#   title={LSTMs for human activity recognition},
-#   author={Chevalier, Guillaume},
-#   year={2016}
-# }
-# ```
-# 
-# ## Extra links
-# 
-# ### Connect with me
-# 
-# - [LinkedIn](https://ca.linkedin.com/in/chevalierg)
-# - [Twitter](https://twitter.com/guillaume_che)
-# - [GitHub](https://github.com/guillaume-chevalier/)
-# - [Quora](https://www.quora.com/profile/Guillaume-Chevalier-2)
-# - [YouTube](https://www.youtube.com/c/GuillaumeChevalier)
-# - [Dev/Consulting](http://www.neuraxio.com/en/)
-# 
-# ### Liked this project? Did it help you? Leave a [star](https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition/stargazers), [fork](https://github.com/guillaume-chevalier/LSTM-Human-Activity-Recognition/network/members) and share the love!
-# 
-# This activity recognition project has been seen in:
-# 
-# - [Hacker News 1st page](https://news.ycombinator.com/item?id=13049143)
-# - [Awesome TensorFlow](https://github.com/jtoy/awesome-tensorflow#tutorials)
-# - [TensorFlow World](https://github.com/astorfi/TensorFlow-World#some-useful-tutorials)
-# - And more.
-# 
-# ---
-# 
-
-# %%
-# Let's convert this notebook to a README automatically for the GitHub project's title page:
-#get_ipython().system('jupyter nbconvert --to markdown LSTM.ipynb')
-#get_ipython().system('mv LSTM.md README.md')
