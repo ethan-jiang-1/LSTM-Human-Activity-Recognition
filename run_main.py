@@ -40,7 +40,7 @@ def addNameToTensor(someTensor, theName):
 import traceback 
 def save_model(ses, step, name, nx=None, ny=None):
     import shutil
-    from s_simple_save import simple_save_ex
+    from x_simple_save import simple_save
     dir_name = "./" + name
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
@@ -56,7 +56,7 @@ def save_model(ses, step, name, nx=None, ny=None):
         #                             dir_name, 
         #                             inputs={"my_inputs": tx},
         #                             outputs={"my_outputs": ty})
-        simple_save_ex(ses,
+        simple_save(ses,
                     dir_name,
                     inputs={"my_inputs": tx},
                     outputs={"my_outputs": ty})        

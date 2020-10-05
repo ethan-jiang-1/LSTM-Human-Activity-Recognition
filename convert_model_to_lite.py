@@ -1,14 +1,18 @@
 # Version 1.0.0 (some previous versions are used in past commits)
 import os
 import traceback
-import sys 
+import sys
+# from x_lite import TFLiteConverter 
 
 # http://primo.ai/index.php?title=Converting_to_TensorFlow_Lite
 # Converting a SavedModel.
 def convert_and_save(model_name):
     print("try to convert {}".format(model_name))
     import tensorflow as tf
-    converter = tf.lite.TFLiteConverter.from_saved_model("./" + model_name)
+    # TFLiteConverter = tf.lite.TFLiteConverter
+    import x_lite
+    TFLiteConverter = x_lite.TFLiteConverter
+    converter = TFLiteConverter.from_saved_model("./" + model_name)
     converter.allow_custom_ops = True
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.target_spec.supported_types = [tf.float32]

@@ -23,8 +23,8 @@ from tensorflow.python.saved_model import builder
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import signature_def_utils
 from tensorflow.python.saved_model import tag_constants
-from tensorflow.python.util import deprecation
-from tensorflow.python.util.tf_export import tf_export
+# from tensorflow.python.util import deprecation
+# from tensorflow.python.util.tf_export import tf_export
 
 
 #@tf_export(v1=['saved_model.simple_save'])
@@ -76,20 +76,15 @@ def simple_save_ex(session, export_dir, inputs, outputs, legacy_init_op=None):
       legacy_init_op: Legacy support for op or group of ops to execute after the
           restore op upon a load.
     """
-    # signature_def_map = {
-    #     signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-    #         signature_def_utils.predict_signature_def(inputs, outputs)
-    # }
-    signature_def_map = {}
+    signature_def_map = {
+        signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature_def_utils.predict_signature_def(inputs, outputs)
+    }
     b = builder.SavedModelBuilder(export_dir)
-    # b.add_meta_graph_and_variables(
-    #     session,
-    #     tags=[tag_constants.SERVING],
-    #     signature_def_map=signature_def_map,
-    #     assets_collection=ops.get_collection(ops.GraphKeys.ASSET_FILEPATHS),
-    #     main_op=legacy_init_op,
-    #     clear_devices=True)
     b.add_meta_graph_and_variables(
         session,
-        tags=[tag_constants.SERVING])  
+        tags=[tag_constants.SERVING],
+        signature_def_map=signature_def_map,
+        assets_collection=ops.get_collection(ops.GraphKeys.ASSET_FILEPATHS),
+        main_op=legacy_init_op,
+        clear_devices=True)
     b.save()
