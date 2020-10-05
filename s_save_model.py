@@ -6,56 +6,9 @@ import os
 import traceback
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_console_prompt import ConsoleColor
+from s_graph import inspect_graph
 from x_simple_save import simple_save
 
-
-# tf.enable_resource_variables()
-graph = tf.get_default_graph()
-
-
-def inspect_graph(mark):
-    if mark is not None:
-        prompt_yellow(mark)
-    for op in graph.get_operations():
-        if op.name.find("my_") == 0:
-            prompt_blue(op.name, op.type, op.values())
-    return "len({})".format(len(graph.get_operations()))
-
-
-et_dir_name = '/tmp/LSTM_logs'
-if os.path.isdir(et_dir_name):
-    shutil.rmtree(et_dir_name)
-os.mkdir(et_dir_name)
-et_op_merge_all = tf.summary.merge_all()
-et_summary_writer = None
-
-def _get_summary_write(ses):
-    global et_summary_writer
-    if et_summary_writer is None:
-        et_summary_writer = tf.summary.FileWriter(et_dir_name, ses.graph)
-    return et_summary_writer
-
-def _prompt_board(ses, step):
-    if step % 100 != 0:
-        return
-    prompt_yellow("Run the command line: --> tensorboard --logdir={} "
-                  "\nThen open http://localhost:6006/ into your web browser".format(et_dir_name))
-
-
-def export_tensorboard(ses, step, x, y, nx, ny):
-    writer = _get_summary_write(ses)
-    try:
-        # summary  = et_op_merge_all.eval(session=ses, feed_dict={})
-        summary = ses.run(et_op_merge_all, feed_dict={x: nx, y: ny})
-        if summary is not None:
-            writer.add_summary(summary, step)
-            _prompt_board(ses, step)
-        return True
-    except Exception as e:
-        prompt_red("\n\n** export_tensorboard: {}".format(e))
-        with ConsoleColor(ConsoleColor.RED):
-            traceback.print_exc()
-    return False
 
 def _add_name_to_tensor(someTensor, theName):
     return tf.identity(someTensor, name=theName)

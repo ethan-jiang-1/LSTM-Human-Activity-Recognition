@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 from sklearn import metrics
 
-from s_save_model import inspect_graph, save_model_pb, save_model_ses, export_tensorboard
+from s_save_model import save_model_pb, save_model_ses
+from s_graph import inspect_graph, get_summary_writer, add_summary
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all
 # load dataset from data_loader
@@ -20,6 +21,7 @@ y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
 
+tf.enable_resource_variables()
 tf.logging.set_verbosity(tf.logging.ERROR)
 
 # %% [markdown]
@@ -131,34 +133,48 @@ def LSTM_RNN(_X, _weights, _biases):
 # ## Let's get serious and build the neural network:
 inspect_graph("start")
 
+with tf.name_scope("Data"):
+    # Graph input/output
+    x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")  # 128 steps 9 input
+    y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output") # 6 classified result
+    inspect_graph("input/output graph")
 
-# Graph input/output
-x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")  # 128 steps 9 input
-y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output") # 6 classified result
-inspect_graph("input/output graph")
+with tf.name_scope("Model"):
+    # Graph weights
+    weights = {
+        # Hidden layer weights
+        'hidden': tf.Variable(tf.random_normal([n_input, n_hidden])),
+        'out': tf.Variable(tf.random_normal([n_hidden, n_classes], mean=1.0))
+    }
+    biases = {
+        'hidden': tf.Variable(tf.random_normal([n_hidden])),
+        'out': tf.Variable(tf.random_normal([n_classes]))
+    }    
+    pred = LSTM_RNN(x, weights, biases)
 
-# Graph weights
-weights = {
-    'hidden': tf.Variable(tf.random_normal([n_input, n_hidden])), # Hidden layer weights
-    'out': tf.Variable(tf.random_normal([n_hidden, n_classes], mean=1.0))
-}
-biases = {
-    'hidden': tf.Variable(tf.random_normal([n_hidden])),
-    'out': tf.Variable(tf.random_normal([n_classes]))
-}
+with tf.name_scope("Loss"):
+    # Loss, optimizer and evaluation
+    _l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
 
-pred = LSTM_RNN(x, weights, biases)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + _l2 # Softmax loss
 
-# Loss, optimizer and evaluation
-_l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
+with tf.name_scope("Optimizer"):
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + _l2 # Softmax loss
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
-
-_correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
+with tf.name_scope("Accuray"):
+    _correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
+    accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
 
 # %% [markdown]
+
+init = tf.global_variables_initializer()
+
+# Create a summary to monitor cost tensor
+tf.summary.scalar("loss", cost)
+# Create a summary to monitor accuracy tensor
+tf.summary.scalar("accuracy", accuracy)
+# Merge all summaries into a single op
+merged_summary_op = tf.summary.merge_all()
 # ## Hooray, now train the neural network:
 
 # %%
@@ -166,7 +182,6 @@ accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
 # Launch the graph
 inspect_graph("before_init")
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
-init = tf.global_variables_initializer()
 sess.run(init)
 inspect_graph("after_init")
 
@@ -175,50 +190,56 @@ test_accuracies = []
 train_losses = []
 train_accuracies = []
 
-# Perform Training steps with "batch_size" amount of example data at each loop
-step = 1
-save_model_ses(sess, step)
-save_model_pb(sess, step, "model_save_init", nx=x, ny=y)
-while step * batch_size <= training_iters:
-    batch_xs = extract_batch_size(X_train, step, batch_size)
-    batch_ys = extract_batch_size(y_train, step, batch_size)
-    batch_ys_oh = one_hot(batch_ys)
+writer = get_summary_writer(sess)
 
-    # Fit training using batch data
-    _, loss, acc = sess.run(
-        [optimizer, cost, accuracy],
-        feed_dict={
-            x: batch_xs, 
-            y: batch_ys_oh
-        }
-    )
-    train_losses.append(loss)
-    train_accuracies.append(acc)
-    
-    # Evaluate network only at some steps for faster training: 
-    if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
-        
-        # To not spam console, show training accuracy/loss in this "if"
-        print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
-        if step % 400 == 100:
-            save_model_pb(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
-            export_tensorboard(sess, step, x, y, batch_xs, batch_ys_oh)
-        if step % 100 == 0:
-            save_model_ses(sess, step)
-        
-        # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
-        loss, acc = sess.run(
-            [cost, accuracy], 
+# Perform Training steps with "batch_size" amount of example data at each loop
+with tf.name_scope("Training"):
+    step = 1
+    save_model_ses(sess, step)
+    save_model_pb(sess, step, "model_save_init", nx=x, ny=y)
+    while step * batch_size <= training_iters:
+        batch_xs = extract_batch_size(X_train, step, batch_size)
+        batch_ys = extract_batch_size(y_train, step, batch_size)
+        batch_ys_oh = one_hot(batch_ys)
+
+        # Fit training using batch data
+        _, loss, acc = sess.run(
+            [optimizer, cost, accuracy],
             feed_dict={
-                x: X_test,
-                y: one_hot(y_test)
+                x: batch_xs, 
+                y: batch_ys_oh
             }
         )
-        test_losses.append(loss)
-        test_accuracies.append(acc)
-        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
+        train_losses.append(loss)
+        train_accuracies.append(acc)
+        
+        # Evaluate network only at some steps for faster training: 
+        if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
+            
+            # To not spam console, show training accuracy/loss in this "if"
+            print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
+            if step % 400 == 100:
+                save_model_pb(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
+            if step % 100 == 0:
+                save_model_ses(sess, step)
+                add_summary(sess, step, merged_summary_op, feed_dict={
+                    x: batch_xs,
+                    y: batch_ys_oh
+                })
 
-    step += 1
+            # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
+            loss, acc = sess.run(
+                [cost, accuracy], 
+                feed_dict={
+                    x: X_test,
+                    y: one_hot(y_test)
+                }
+            )
+            test_losses.append(loss)
+            test_accuracies.append(acc)
+            print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
+
+        step += 1
 
 
 print("Optimization Finished!")
@@ -227,17 +248,18 @@ save_model_pb(sess, step + 1, "model_save_final", nx=x, ny=y)
 
 
 # Accuracy for test data
+with tf.name_scope("Predict"):
 
-one_hot_predictions, accuracy, final_loss = sess.run(
-    [pred, accuracy, cost],
-    feed_dict={
-        x: X_test,
-        y: one_hot(y_test)
-    }
-)
+    one_hot_predictions, accuracy, final_loss = sess.run(
+        [pred, accuracy, cost],
+        feed_dict={
+            x: X_test,
+            y: one_hot(y_test)
+        }
+    )
 
-test_losses.append(final_loss)
-test_accuracies.append(accuracy)
+    test_losses.append(final_loss)
+    test_accuracies.append(accuracy)
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
 
