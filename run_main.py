@@ -5,6 +5,7 @@ import tensorflow as tf  # Version 1.0.0 (some previous versions are used in pas
 from sklearn import metrics
 
 import os
+import shutil
 
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all
@@ -20,12 +21,30 @@ LABELS = dh.LABELS
 graph = tf.get_default_graph()
 
 def inspect_graph(mark):
-    if False:
-        if mark is not None:
-            prompt_yellow(mark)
-        for op in graph.get_operations():
-            if op.name.find("my_") == 0:
-                prompt_blue(op.name, op.type, op.values())
+    if mark is not None:
+        prompt_yellow(mark)
+    for op in graph.get_operations():
+        if op.name.find("my_") == 0:
+            prompt_blue(op.name, op.type, op.values())
+
+
+et_dir_name = '/tmp/LSTM_logs'
+if os.path.isdir(et_dir_name):
+    shutil.rmtree(et_dir_name)
+os.mkdir(et_dir_name)
+et_op_merge_all = tf.summary.merge_all()
+
+
+def export_tensorboard(ses, step):
+    et_summary_writer = tf.summary.FileWriter(et_dir_name)
+    et_summary_writer.add_graph(graph.get_operations())
+
+    # summary  = et_op_merge_all.eval(session=ses, feed_dict={})
+    # summary = ses.run(et_op_merge_all, feed_dict={})
+    # et_summary_writer.add_summary(summary, step)
+
+    prompt_yellow("Run the command line: --> tensorboard --logdir={} "
+          "\nThen open http://localhost:6006/ into your web browser".format(et_dir_name))
 
 
 # input/output graph??
@@ -39,7 +58,6 @@ def addNameToTensor(someTensor, theName):
 # aux functions 
 import traceback 
 def save_model(ses, step, name, nx=None, ny=None):
-    import shutil
     from x_simple_save import simple_save
     dir_name = "./" + name
     if os.path.isdir(dir_name):
@@ -61,6 +79,7 @@ def save_model(ses, step, name, nx=None, ny=None):
                     inputs={"my_inputs": tx},
                     outputs={"my_outputs": ty})        
         prompt_green("\n\n**model {} saved.".format(step))
+        export_tensorboard(ses, step)
         return True
     except Exception as ex:
         prompt_red("\n\n**model {} failed to saved: {}".format(step, ex))
