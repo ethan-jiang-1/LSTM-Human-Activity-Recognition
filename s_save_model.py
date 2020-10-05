@@ -64,39 +64,54 @@ def _add_name_to_tensor(someTensor, theName):
 # aux functions
 
 
-def _prepare_save_pb(ses, step, name, nx, ny):
+def _prepare_save_dir(ses, step, name):
     dir_name = "./" + name
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
     else:
         os.mkdir(dir_name)
-    tx = nx
-    # if nx is not None:
-    #     if not hasattr(nx, "op"):
-    #         tx = _add_name_to_tensor(nx, "my_x_input_step")
-    ty = ny
-    # if ny is not None:
-    #     if not hasattr(nx, "op"):
-    #         ty = _add_name_to_tensor(ny, "my_y_output_step")
+    return dir_name
 
-    return dir_name, tx, ty
+
+def _prepare_save_tensor(nx, ny):
+    tx = nx
+    if nx is not None:
+        if not hasattr(nx, "op"):
+            tx = _add_name_to_tensor(nx, "my_x_input_step")
+    ty = ny
+    if ny is not None:
+        if not hasattr(nx, "op"):
+            ty = _add_name_to_tensor(ny, "my_y_output_step")
+
+    return tx, ty
 
 
 def save_model_pb(ses, step, name, nx=None, ny=None):
-    dir_name, tx, ty = _prepare_save_pb(ses, step, name, nx, ny)
-    prompt_green("tx: {}".format(tx))
-    prompt_green("ty: {}".format(ty))
+    dir_name = _prepare_save_dir(ses, step, name)
+    # tx, ty = _prepare_save_tensor(nx, ny)
+    # prompt_green("tx: {}".format(tx))
+    # prompt_green("ty: {}".format(ty))
 
     try:
         inspect_graph("saved_model")
+
+        # attemp1 
         # tf.saved_model.simple_save(ses,
         #                             dir_name,
         #                             inputs={"my_inputs": tx},
         #                             outputs={"my_outputs": ty})
-        simple_save(ses,
-                    dir_name,
-                    inputs={"my_inputs": tx},
-                    outputs={"my_outputs": ty})
+        
+        # attemp2
+        # simple_save(ses,
+        #             dir_name,
+        #             inputs={"my_inputs": tx},
+        #             outputs={"my_outputs": ty})
+        
+        # attemp3
+        builder = tf.saved_model.builder.SavedModelBuilder(dir_name)
+        builder.add_meta_graph_and_variables(ses, ['tag_string'])
+        builder.save()
+
         prompt_green("\n\n**model {} saved.".format(step))
     except Exception as ex:
         prompt_red("\n\n**model {} failed to saved: {}".format(step, ex))
