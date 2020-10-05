@@ -32,7 +32,7 @@ from tensorflow.python.saved_model import tag_constants
 #    None,
 #    'This function will only be available through the v1 compatibility '
 #    'library as tf.compat.v1.saved_model.simple_save.')
-def simple_save_ex(session, export_dir, inputs, outputs, legacy_init_op=None):
+def simple_save(session, export_dir, inputs, outputs, legacy_init_op=None):
     """Convenience function to build a SavedModel suitable for serving.
 
     In many common cases, saving models for serving will be as simple as:
