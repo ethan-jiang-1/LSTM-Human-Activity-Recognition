@@ -1,12 +1,15 @@
+
+import os
+import shutil
+import traceback
+
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 from sklearn import metrics
 
-import os
-import shutil
-
+from s_save_model import inspect_graph, save_model_pb, save_model_ses
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all
 # load dataset from data_loader
@@ -16,92 +19,6 @@ X_test = dh.X_test
 y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
-
-# tf.enable_resource_variables()
-graph = tf.get_default_graph()
-
-def inspect_graph(mark):
-    if mark is not None:
-        prompt_yellow(mark)
-    for op in graph.get_operations():
-        if op.name.find("my_") == 0:
-            prompt_blue(op.name, op.type, op.values())
-
-
-et_dir_name = '/tmp/LSTM_logs'
-if os.path.isdir(et_dir_name):
-    shutil.rmtree(et_dir_name)
-os.mkdir(et_dir_name)
-et_op_merge_all = tf.summary.merge_all()
-
-
-def export_tensorboard(ses, step):
-    et_summary_writer = tf.summary.FileWriter(et_dir_name)
-    et_summary_writer.add_graph(graph.get_operations())
-
-    # summary  = et_op_merge_all.eval(session=ses, feed_dict={})
-    # summary = ses.run(et_op_merge_all, feed_dict={})
-    # et_summary_writer.add_summary(summary, step)
-
-    prompt_yellow("Run the command line: --> tensorboard --logdir={} "
-          "\nThen open http://localhost:6006/ into your web browser".format(et_dir_name))
-
-
-# input/output graph??
-x = None
-y = None
-
-def addNameToTensor(someTensor, theName):
-    return tf.identity(someTensor, name=theName)
-
-
-# aux functions 
-import traceback 
-def save_model(ses, step, name, nx=None, ny=None):
-    from x_simple_save import simple_save
-    dir_name = "./" + name
-    if os.path.isdir(dir_name):
-        shutil.rmtree(dir_name)
-    tx = x 
-    if nx is not None:
-        tx = addNameToTensor(nx, "my_x_input_" + str(step))
-    ty = y
-    if ny is not None:
-        ty = addNameToTensor(ny, "my_y_output_" + str(step))     
-    try:
-        inspect_graph("saved_model")
-        # tf.saved_model.simple_save(ses, 
-        #                             dir_name, 
-        #                             inputs={"my_inputs": tx},
-        #                             outputs={"my_outputs": ty})
-        simple_save(ses,
-                    dir_name,
-                    inputs={"my_inputs": tx},
-                    outputs={"my_outputs": ty})        
-        prompt_green("\n\n**model {} saved.".format(step))
-        export_tensorboard(ses, step)
-        return True
-    except Exception as ex:
-        prompt_red("\n\n**model {} failed to saved: {}".format(step, ex))
-        traceback.print_exc()
-    return False
-
-
-def save_model_ses(ses, step):
-    if not os.path.isdir("./model_save_ses"):
-        os.mkdir("./model_save_ses")
-    try:
-        inspect_graph("saved_model_ses")
-        saver = tf.train.Saver()
-        saver.save(ses, './model_save_ses/model_save' , global_step=step, write_meta_graph=True)
-        tf.train.write_graph(ses.graph_def, '', './model_save_ses/model_save-{}.pb'.format(step), as_text=False)
-        prompt_green(
-            "**model_ses {} saved, graph_op_len: {}".format(step, len(graph.get_operations())))
-        return True
-    except Exception as ex:
-        prompt_red("**model_ses {} failed to saved {}".format(step, ex))
-        traceback.print_exc()
-    return False
 
 
 # %% [markdown]
@@ -260,7 +177,7 @@ train_accuracies = []
 # Perform Training steps with "batch_size" amount of example data at each loop
 step = 1
 save_model_ses(sess, step)
-save_model(sess, step, "model_save_init")
+save_model_pb(sess, step, "model_save_init", nx=x, ny=y)
 while step * batch_size <= training_iters:
     batch_xs = extract_batch_size(X_train, step, batch_size)
     batch_ys = extract_batch_size(y_train, step, batch_size)
@@ -283,7 +200,7 @@ while step * batch_size <= training_iters:
         # To not spam console, show training accuracy/loss in this "if"
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 400 == 100:
-            save_model(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
+            save_model_pb(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
         if step % 100 == 0:
             save_model_ses(sess, step)
         
@@ -304,7 +221,7 @@ while step * batch_size <= training_iters:
 
 print("Optimization Finished!")
 save_model_ses(sess, step)
-save_model(sess, step + 1, "model_save_final")
+save_model_pb(sess, step + 1, "model_save_final", nx=x, ny=y)
 
 
 # Accuracy for test data
@@ -322,7 +239,7 @@ test_accuracies.append(accuracy)
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
 
-save_model(sess, step + 2, "model_save_pred")
+save_model_pb(sess, step + 2, "model_save_pred", nx=x, ny=y)
 
 
 # %% [markdown]
