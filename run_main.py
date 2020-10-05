@@ -133,22 +133,25 @@ def LSTM_RNN(_X, _weights, _biases):
 # ## Let's get serious and build the neural network:
 inspect_graph("start")
 
-with tf.name_scope("Data"):
-    # Graph input/output
-    x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")  # 128 steps 9 input
-    y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output") # 6 classified result
-    inspect_graph("input/output graph")
+# Graph input/output
+with tf.name_scope("Input"):
+    # 128 steps 9 input
+    x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
+with tf.name_scope("Output"):
+    # 6 classified result
+    y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
+inspect_graph("input/output graph")
 
 with tf.name_scope("Model"):
     # Graph weights
     weights = {
         # Hidden layer weights
-        'hidden': tf.Variable(tf.random_normal([n_input, n_hidden])),
-        'out': tf.Variable(tf.random_normal([n_hidden, n_classes], mean=1.0))
+        'hidden': tf.Variable(tf.random_normal([n_input, n_hidden], name="weights_hidden")),
+        'out': tf.Variable(tf.random_normal([n_hidden, n_classes], mean=1.0), name="weights_out")
     }
     biases = {
-        'hidden': tf.Variable(tf.random_normal([n_hidden])),
-        'out': tf.Variable(tf.random_normal([n_classes]))
+        'hidden': tf.Variable(tf.random_normal([n_hidden]), name="biases_hidden"),
+        'out': tf.Variable(tf.random_normal([n_classes]), name="biases_out")
     }    
     pred = LSTM_RNN(x, weights, biases)
 
@@ -162,8 +165,8 @@ with tf.name_scope("Optimizer"):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
 
 with tf.name_scope("Accuray"):
-    _correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-    accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32))
+    _correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1), name="_correct_pred")
+    accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32), name="accuracy")
 
 # %% [markdown]
 
