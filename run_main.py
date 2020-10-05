@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 from sklearn import metrics
 
-from s_save_model import inspect_graph, save_model_pb, save_model_ses
+from s_save_model import inspect_graph, save_model_pb, save_model_ses, export_tensorboard
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all
 # load dataset from data_loader
@@ -201,6 +201,7 @@ while step * batch_size <= training_iters:
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 400 == 100:
             save_model_pb(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
+            export_tensorboard(sess, step, x, y, batch_xs, batch_ys_oh)
         if step % 100 == 0:
             save_model_ses(sess, step)
         
