@@ -88,7 +88,7 @@ def _prepare_save_tensor(nx, ny):
 
 def save_model_pb(ses, step, name, nx=None, ny=None):
     dir_name = _prepare_save_dir(ses, step, name)
-    # tx, ty = _prepare_save_tensor(nx, ny)
+    tx, ty = _prepare_save_tensor(nx, ny)
     # prompt_green("tx: {}".format(tx))
     # prompt_green("ty: {}".format(ty))
 
@@ -102,15 +102,16 @@ def save_model_pb(ses, step, name, nx=None, ny=None):
         #                             outputs={"my_outputs": ty})
         
         # attemp2
-        # simple_save(ses,
-        #             dir_name,
-        #             inputs={"my_inputs": tx},
-        #             outputs={"my_outputs": ty})
+        simple_save(ses,
+                     dir_name,
+                     inputs={"my_inputs": tx},
+                     outputs={"my_outputs": ty})
         
         # attemp3
-        builder = tf.saved_model.builder.SavedModelBuilder(dir_name)
-        builder.add_meta_graph_and_variables(ses, ['tag_string'])
-        builder.save()
+        # builder = tf.saved_model.builder.SavedModelBuilder(dir_name)
+        # builder.add_meta_graph_and_variables(
+        #     ses, [tf.saved_model.tag_constants.SERVING])
+        # builder.save()
 
         prompt_green("\n\n**model {} saved.".format(step))
     except Exception as ex:

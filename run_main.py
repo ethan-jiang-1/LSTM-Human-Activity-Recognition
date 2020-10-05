@@ -20,6 +20,7 @@ y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
 
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 # %% [markdown]
 # ## Additionnal Parameters:
