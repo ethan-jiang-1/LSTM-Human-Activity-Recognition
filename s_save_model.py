@@ -26,25 +26,19 @@ def _prepare_save_dir(ses, step, name):
     return dir_name
 
 
-named_input_output = False
-
-
-def _prepare_save_placeholder(vx, vy):
-    global named_input_output
-    if not named_input_output:
-        with tf.name_scope("Input"):
-            tx = _add_name_to_tensor(vx, "my_x_input")
-        with tf.name_scope("Output"):
-            ty = _add_name_to_tensor(vy, "my_y_output")
-        # named_input_output = True
-        prompt_yellow("_prepare_save_placeholder {} {}".format(tx, ty)) 
-        return tx, ty
-    return vx, vy
+def _prepare_io_data(x, y, vx, vy):
+    with tf.name_scope("Input"):
+        tx = _add_name_to_tensor(vx, "my_x_input")
+    with tf.name_scope("Output"):
+        ty = _add_name_to_tensor(vy, "my_y_output")
+    # named_input_output = True
+    prompt_yellow("_prepare_io_data {} {}".format(tx, ty)) 
+    return tx, ty
 
 
 def save_model_pb(ses, step, name, x, y, vx, vy):
     dir_name = _prepare_save_dir(ses, step, name)
-    tx, ty = _prepare_save_placeholder(vx, vy)
+    tx, ty = _prepare_io_data(x, y, vx, vy)
     # prompt_green("tx: {}".format(tx))
     # prompt_green("ty: {}".format(ty))
 

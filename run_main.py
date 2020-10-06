@@ -196,75 +196,95 @@ train_accuracies = []
 writer = get_summary_writer(sess)
 
 # Perform Training steps with "batch_size" amount of example data at each loop
-with tf.name_scope("Training"):
-    step = 1
-    while step * batch_size <= training_iters:
+
+step = 1
+while step * batch_size <= training_iters:
+    with tf.name_scope("Input"):
         batch_xs = extract_batch_size(X_train, step, batch_size)
+    with tf.name_scope("Output"):
         batch_ys = extract_batch_size(y_train, step, batch_size)
         batch_ys_oh = one_hot(batch_ys)
 
-        # Fit training using batch data
-        _, loss, acc = sess.run(
-            [optimizer, cost, accuracy],
-            feed_dict={
-                x: batch_xs, 
+    # Fit training using batch data
+    _, loss, acc = sess.run(
+        [optimizer, cost, accuracy],
+        feed_dict={
+            x: batch_xs, 
+            y: batch_ys_oh
+        }
+    )
+    train_losses.append(loss)
+    train_accuracies.append(acc)
+    
+    # Evaluate network only at some steps for faster training: 
+    if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
+        
+        # To not spam console, show training accuracy/loss in this "if"
+        print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
+        if step % 400 == 100:
+            save_model_pb(sess, step, "model_save_" + str(step), x, y, batch_xs, batch_ys_oh)
+        if step % 100 == 0:
+            save_model_ses(sess, step)
+            add_summary(sess, step, merged_summary_op, feed_dict={
+                x: batch_xs,
                 y: batch_ys_oh
+            })
+
+        # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
+        loss, acc = sess.run(
+            [cost, accuracy], 
+            feed_dict={
+                x: X_test,
+                y: one_hot(y_test)
             }
         )
-        train_losses.append(loss)
-        train_accuracies.append(acc)
-        
-        # Evaluate network only at some steps for faster training: 
-        if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
-            
-            # To not spam console, show training accuracy/loss in this "if"
-            print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
-            if step % 400 == 100:
-                save_model_pb(sess, step, "model_save_" + str(step), x, y, batch_xs, batch_ys_oh)
-            if step % 100 == 0:
-                save_model_ses(sess, step)
-                add_summary(sess, step, merged_summary_op, feed_dict={
-                    x: batch_xs,
-                    y: batch_ys_oh
-                })
+        test_losses.append(loss)
+        test_accuracies.append(acc)
+        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
 
-            # Evaluation on the test set (no learning made here - just evaluation for diagnosis)
-            loss, acc = sess.run(
-                [cost, accuracy], 
-                feed_dict={
-                    x: X_test,
-                    y: one_hot(y_test)
-                }
-            )
-            test_losses.append(loss)
-            test_accuracies.append(acc)
-            print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
-
-        step += 1
+    step += 1
 
 
 print("Optimization Finished!")
+step += 1
 save_model_ses(sess, step)
-save_model_pb(sess, step + 1, "model_save_final", x, y, batch_xs, batch_ys_oh)
+save_model_pb(sess, step, "model_save_tend", x, y, batch_xs, batch_ys_oh)
 
 
-# Accuracy for test data
-with tf.name_scope("Predict"):
-    y_test_oh = one_hot(y_test)
-    one_hot_predictions, accuracy, final_loss = sess.run(
+prompt_yellow("Last saving: model_save_pone")
+step += 1
+with tf.name_scope("Input"):
+    tmp_batch_one_xs = extract_batch_size(X_test, step, 1)
+with tf.name_scope("Output"):
+    tmp_batch_one_ys = extract_batch_size(y_test, step, 1)
+    tmp_batch_one_ys_oh = one_hot(tmp_batch_one_ys)
+    tmp_one_hot_predictions, tmp_accuracy, tmp_final_loss = sess.run(
         [pred, accuracy, cost],
         feed_dict={
-            x: X_test,
-            y: y_test_oh
+            x: tmp_batch_one_xs,
+            y: tmp_batch_one_ys_oh
         }
     )
+save_model_pb(sess, step, "model_save_pone", x, y, tmp_batch_one_xs, tmp_batch_one_ys_oh)
 
-    test_losses.append(final_loss)
-    test_accuracies.append(accuracy)
+
+prompt_yellow("Last saving: model_save_pall")
+step += 1
+# Accuracy for test data
+y_test_oh = one_hot(y_test)
+one_hot_predictions, accuracy, final_loss = sess.run(
+    [pred, accuracy, cost],
+    feed_dict={
+        x: X_test,
+        y: y_test_oh
+    }
+)
+save_model_pb(sess, step, "model_save_pall", x, y, X_test, y_test_oh)
+
+test_losses.append(final_loss)
+test_accuracies.append(accuracy)
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
-
-save_model_pb(sess, step + 2, "model_save_pred", x, y, X_test, y_test_oh)
 
 
 # %% [markdown]
@@ -283,8 +303,8 @@ font = {
 }
 matplotlib.rc('font', **font)
 
-width = 12
-height = 12
+width = 9
+height = 6
 plt.figure(figsize=(width, height))
 
 indep_train_axis = np.array(range(batch_size, (len(train_losses)+1)*batch_size, batch_size))
@@ -333,8 +353,8 @@ print("Note: training and testing data is not equally distributed amongst classe
 print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
 
 # Plot Results: 
-width = 12
-height = 12
+width = 9
+height = 6
 plt.figure(figsize=(width, height))
 plt.imshow(
     normalised_confusion_matrix, 
