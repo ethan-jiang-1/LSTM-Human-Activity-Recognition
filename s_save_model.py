@@ -26,22 +26,25 @@ def _prepare_save_dir(ses, step, name):
     return dir_name
 
 
-def _prepare_save_tensor(nx, ny):
-    tx = nx
-    if nx is not None:
-        if not hasattr(nx, "op"):
-            tx = _add_name_to_tensor(nx, "my_x_input_step")
-    ty = ny
-    if ny is not None:
-        if not hasattr(nx, "op"):
-            ty = _add_name_to_tensor(ny, "my_y_output_step")
-
-    return tx, ty
+named_input_output = False
 
 
-def save_model_pb(ses, step, name, nx=None, ny=None):
+def _prepare_save_placeholder(vx, vy):
+    global named_input_output
+    if not named_input_output:
+        with tf.name_scope("Input"):
+            tx = _add_name_to_tensor(vx, "my_x_input")
+        with tf.name_scope("Output"):
+            ty = _add_name_to_tensor(vy, "my_y_output")
+        # named_input_output = True
+        prompt_yellow("_prepare_save_placeholder {} {}".format(tx, ty)) 
+        return tx, ty
+    return vx, vy
+
+
+def save_model_pb(ses, step, name, x, y, vx, vy):
     dir_name = _prepare_save_dir(ses, step, name)
-    tx, ty = _prepare_save_tensor(nx, ny)
+    tx, ty = _prepare_save_placeholder(vx, vy)
     # prompt_green("tx: {}".format(tx))
     # prompt_green("ty: {}".format(ty))
 
@@ -49,16 +52,16 @@ def save_model_pb(ses, step, name, nx=None, ny=None):
         inspect_graph("saved_model")
 
         # attemp1 
-        # tf.saved_model.simple_save(ses,
-        #                             dir_name,
-        #                             inputs={"my_inputs": tx},
-        #                             outputs={"my_outputs": ty})
+        tf.saved_model.simple_save(ses,
+                                     dir_name,
+                                     inputs={"my_inputs": tx},
+                                     outputs={"my_outputs": ty})
         
         # attemp2
-        simple_save(ses,
-                     dir_name,
-                     inputs={"my_inputs": tx},
-                     outputs={"my_outputs": ty})
+        #simple_save(ses,
+        #             dir_name,
+        #             inputs={"x": tx},
+        #             outputs={"y": ty})
         
         # attemp3
         # builder = tf.saved_model.builder.SavedModelBuilder(dir_name)

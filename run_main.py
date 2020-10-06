@@ -198,8 +198,6 @@ writer = get_summary_writer(sess)
 # Perform Training steps with "batch_size" amount of example data at each loop
 with tf.name_scope("Training"):
     step = 1
-    save_model_ses(sess, step)
-    save_model_pb(sess, step, "model_save_init", nx=x, ny=y)
     while step * batch_size <= training_iters:
         batch_xs = extract_batch_size(X_train, step, batch_size)
         batch_ys = extract_batch_size(y_train, step, batch_size)
@@ -222,7 +220,7 @@ with tf.name_scope("Training"):
             # To not spam console, show training accuracy/loss in this "if"
             print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
             if step % 400 == 100:
-                save_model_pb(sess, step, "model_save_" + str(step), nx=batch_xs, ny=batch_ys_oh)
+                save_model_pb(sess, step, "model_save_" + str(step), x, y, batch_xs, batch_ys_oh)
             if step % 100 == 0:
                 save_model_ses(sess, step)
                 add_summary(sess, step, merged_summary_op, feed_dict={
@@ -247,17 +245,17 @@ with tf.name_scope("Training"):
 
 print("Optimization Finished!")
 save_model_ses(sess, step)
-save_model_pb(sess, step + 1, "model_save_final", nx=x, ny=y)
+save_model_pb(sess, step + 1, "model_save_final", x, y, batch_xs, batch_ys_oh)
 
 
 # Accuracy for test data
 with tf.name_scope("Predict"):
-
+    y_test_oh = one_hot(y_test)
     one_hot_predictions, accuracy, final_loss = sess.run(
         [pred, accuracy, cost],
         feed_dict={
             x: X_test,
-            y: one_hot(y_test)
+            y: y_test_oh
         }
     )
 
@@ -266,7 +264,7 @@ with tf.name_scope("Predict"):
 
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
 
-save_model_pb(sess, step + 2, "model_save_pred", nx=x, ny=y)
+save_model_pb(sess, step + 2, "model_save_pred", x, y, X_test, y_test_oh)
 
 
 # %% [markdown]
