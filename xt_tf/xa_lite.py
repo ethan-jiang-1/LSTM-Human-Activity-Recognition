@@ -38,7 +38,8 @@ from tensorflow.lite.python.convert import toco_convert  # pylint: disable=unuse
 from tensorflow.lite.python.convert import toco_convert_graph_def as _toco_convert_graph_def
 from tensorflow.lite.python.convert import toco_convert_impl as _toco_convert_impl
 from tensorflow.lite.python.convert import toco_convert_protos  # pylint: disable=unused-import
-from tensorflow.lite.python.convert_saved_model import freeze_saved_model as _freeze_saved_model
+#from tensorflow.lite.python.convert_saved_model import freeze_saved_model as _freeze_saved_model
+from xt_tf.xa_convert_saved_model import freeze_saved_model as _freeze_saved_model
 from tensorflow.lite.python.interpreter import Interpreter  # pylint: disable=unused-import
 from tensorflow.lite.python.interpreter import load_delegate  # pylint: disable=unused-import
 from tensorflow.lite.python.op_hint import convert_op_hints_to_stubs  # pylint: disable=unused-import

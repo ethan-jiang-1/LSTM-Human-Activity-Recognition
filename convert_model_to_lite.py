@@ -1,21 +1,49 @@
 # Version 1.0.0 (some previous versions are used in past commits)
+from inspect import signature
+from operator import truediv
 import os
 import traceback
 import sys
-# from x_lite import TFLiteConverter 
+
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import signature_def_utils
+from tensorflow.python.saved_model import tag_constants
+
+import tensorflow as tf
+
+
+using_v2 = False
+
+def find_converter(model_name):
+
+    if not using_v2:
+        print("Using Normal Converter")
+        # from tensorflow.lite.python.lite import TFLiteConverter as tfc
+        from xt_tf.xa_lite import TFLiteConverter as tfc
+        converter = tfc.from_saved_model("./" + model_name)
+        converter.allow_custom_ops = True
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.target_spec.supported_types = [tf.float32]
+
+    else:
+        print("Using V2 Converter")
+        tf.enable_eager_execution()
+        #from tensorflow.lite.python.lite import TFLiteConverterV2 as tfc
+        from xt_tf.xa_lite import TFLiteConverterV2 as tfc
+        tags = [tag_constants.SERVING]
+        signature_keys = [
+            signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        converter = tfc.from_saved_model(
+            "./" + model_name, tags=tags, signature_keys=signature_keys)
+
+    return converter
 
 # http://primo.ai/index.php?title=Converting_to_TensorFlow_Lite
 # Converting a SavedModel.
 def convert_and_save(model_name):
     print("try to convert {}".format(model_name))
-    import tensorflow as tf
-    # TFLiteConverter = tf.lite.TFLiteConverter
-    import x_lite
-    TFLiteConverter = x_lite.TFLiteConverter
-    converter = TFLiteConverter.from_saved_model("./" + model_name)
-    converter.allow_custom_ops = True
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter.target_spec.supported_types = [tf.float32]
+
+    converter = find_converter(model_name)
     tflite_model = converter.convert()
 
     filename = "./model_tflite/" + model_name + ".tflite"

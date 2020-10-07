@@ -7,7 +7,8 @@ import traceback
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_console_prompt import ConsoleColor
 from s_graph import inspect_graph
-from x_simple_save import simple_save
+#from tensorflow.python.saved_model import simple_save
+from xt_tf.xp_saved_model import simple_save
 
 
 save_pb_enabled = True
