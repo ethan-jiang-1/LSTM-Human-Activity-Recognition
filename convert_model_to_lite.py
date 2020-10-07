@@ -45,7 +45,7 @@ def do_convert(name):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    name = "500"
+    name = "100"
 
     if len(sys.argv) >= 2:
         name = sys.argv[1]

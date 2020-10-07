@@ -140,7 +140,7 @@ with tf.name_scope("Input"):
 with tf.name_scope("Output"):
     # 6 classified result
     y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
-inspect_graph("input/output graph")
+
 
 with tf.name_scope("Model"):
     # Graph weights
@@ -154,6 +154,7 @@ with tf.name_scope("Model"):
         'out': tf.Variable(tf.random_normal([n_classes]), name="biases_out")
     }    
     pred = LSTM_RNN(x, weights, biases)
+    pred = tf.identity(pred, name="my_pred")
 
 with tf.name_scope("Loss"):
     # Loss, optimizer and evaluation
@@ -163,11 +164,14 @@ with tf.name_scope("Loss"):
 
 with tf.name_scope("Optimizer"):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
+    # optimizer = tf.identity(optimizer, name="my_optimizer")
 
 with tf.name_scope("Accuray"):
     _correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1), name="_correct_pred")
     accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32), name="accuracy")
+    accuracy = tf.identity(accuracy, name="my_accuracy")
 
+inspect_graph("input/output graph")
 # %% [markdown]
 
 init = tf.global_variables_initializer()
@@ -195,15 +199,33 @@ train_accuracies = []
 
 writer = get_summary_writer(sess)
 
+
+def save_model_pred(sess, step):
+    prompt_yellow("save_model_pred {}".format(step))
+    po_batch_one_xs = extract_batch_size(X_test, step, 1)
+    po_batch_one_ys = extract_batch_size(y_test, step, 1)
+    po_batch_one_ys_oh = one_hot(po_batch_one_ys)
+    po_one_hot_predictions, po_accuracy, po_final_loss = sess.run(
+        [pred, accuracy, cost],
+        feed_dict={
+            x: po_batch_one_xs,
+            y: po_batch_one_ys_oh
+        }
+    )
+    prompt_yellow("pred", po_one_hot_predictions, po_one_hot_predictions.argmax(1))
+    prompt_yellow("actual", po_batch_one_ys_oh, po_batch_one_ys_oh.argmax(1))
+    prompt_yellow("accuracy", po_accuracy)
+    prompt_yellow("loss", po_final_loss)    
+    save_model_pb(sess, step, "model_save_" + str(step), x, y, po_batch_one_xs, po_batch_one_ys_oh)
+
+
 # Perform Training steps with "batch_size" amount of example data at each loop
 
 step = 1
 while step * batch_size <= training_iters:
-    with tf.name_scope("Input"):
-        batch_xs = extract_batch_size(X_train, step, batch_size)
-    with tf.name_scope("Output"):
-        batch_ys = extract_batch_size(y_train, step, batch_size)
-        batch_ys_oh = one_hot(batch_ys)
+    batch_xs = extract_batch_size(X_train, step, batch_size)
+    batch_ys = extract_batch_size(y_train, step, batch_size)
+    batch_ys_oh = one_hot(batch_ys)
 
     # Fit training using batch data
     _, loss, acc = sess.run(
@@ -222,7 +244,7 @@ while step * batch_size <= training_iters:
         # To not spam console, show training accuracy/loss in this "if"
         print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 400 == 100:
-            save_model_pb(sess, step, "model_save_" + str(step), x, y, batch_xs, batch_ys_oh)
+            save_model_pred(sess, step)
         if step % 100 == 0:
             save_model_ses(sess, step)
             add_summary(sess, step, merged_summary_op, feed_dict={
@@ -247,44 +269,21 @@ while step * batch_size <= training_iters:
 
 print("Optimization Finished!")
 step += 1
-save_model_ses(sess, step)
-save_model_pb(sess, step, "model_save_tend", x, y, batch_xs, batch_ys_oh)
+save_model_pred(sess, step)
 
 
-prompt_yellow("Last saving: model_save_pone")
-step += 1
-with tf.name_scope("Input"):
-    tmp_batch_one_xs = extract_batch_size(X_test, step, 1)
-with tf.name_scope("Output"):
-    tmp_batch_one_ys = extract_batch_size(y_test, step, 1)
-    tmp_batch_one_ys_oh = one_hot(tmp_batch_one_ys)
-    tmp_one_hot_predictions, tmp_accuracy, tmp_final_loss = sess.run(
-        [pred, accuracy, cost],
-        feed_dict={
-            x: tmp_batch_one_xs,
-            y: tmp_batch_one_ys_oh
-        }
-    )
-save_model_pb(sess, step, "model_save_pone", x, y, tmp_batch_one_xs, tmp_batch_one_ys_oh)
-
-
-prompt_yellow("Last saving: model_save_pall")
-step += 1
-# Accuracy for test data
+# Final prediction: Accuracy for all test data
 y_test_oh = one_hot(y_test)
-one_hot_predictions, accuracy, final_loss = sess.run(
+one_hot_predictions, final_accuracy, final_loss = sess.run(
     [pred, accuracy, cost],
     feed_dict={
         x: X_test,
         y: y_test_oh
     }
 )
-save_model_pb(sess, step, "model_save_pall", x, y, X_test, y_test_oh)
-
 test_losses.append(final_loss)
-test_accuracies.append(accuracy)
-
-print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(accuracy))
+test_accuracies.append(final_accuracy)
+print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(final_accuracy))
 
 
 # %% [markdown]
@@ -333,7 +332,7 @@ plt.show()
 
 predictions = one_hot_predictions.argmax(1)
 
-print("Testing Accuracy: {}%".format(100*accuracy))
+print("Testing Accuracy: {}%".format(100*final_accuracy))
 
 print("")
 print("Precision: {}%".format(100*metrics.precision_score(y_test, predictions, average="weighted")))

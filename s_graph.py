@@ -16,7 +16,7 @@ def inspect_graph(mark):
     if mark is not None:
         prompt_yellow(mark)
     for op in graph.get_operations():
-        if op.name.find("my_") == 0:
+        if op.name.find("my_") != -1:
             prompt_blue(op.name, op.type, op.values())
     return "len({})".format(len(graph.get_operations()))
 
