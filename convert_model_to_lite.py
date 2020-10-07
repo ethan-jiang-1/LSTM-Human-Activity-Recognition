@@ -10,7 +10,7 @@ from tensorflow.python.saved_model import signature_def_utils
 from tensorflow.python.saved_model import tag_constants
 
 import tensorflow as tf
-
+tf.logging.set_verbosity(tf.logging.INFO)
 
 using_v2 = False
 

@@ -12,13 +12,17 @@ from s_console_prompt import ConsoleColor
 graph = tf.get_default_graph()
 
 
-def inspect_graph(mark):
+def inspect_graph(mark, sess=None):
     if mark is not None:
         prompt_yellow(mark)
-    for op in graph.get_operations():
+
+    cg = graph
+    if sess is not None:
+        cg = sess.graph
+    for op in cg.get_operations():
         if op.name.find("my_") != -1:
             prompt_blue(op.name, op.type, op.values())
-    return "len({})".format(len(graph.get_operations()))
+    return "len({})".format(len(cg.get_operations()))
 
 
 et_dir_name = '/tmp/LSTM_logs'

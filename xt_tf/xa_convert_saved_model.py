@@ -24,7 +24,8 @@ from tensorflow.python.client import session
 from tensorflow.python.framework import ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.saved_model import constants
-from tensorflow.python.saved_model import loader
+# from tensorflow.python.saved_model import loader
+import xt_tf.xa_loader as loader
 
 
 def _log_tensor_details(tensor_info):
@@ -183,10 +184,14 @@ def freeze_saved_model(saved_model_dir, input_arrays, input_shapes,
       input_shapes does not match the length of input_arrays.
       input_arrays or output_arrays are not valid.
   """
+  from xt_tf.xs_utils import inspect_graph
+  inspect_graph("freeze_saved_model_0")
   # Read SignatureDef.
   meta_graph = get_meta_graph_def(saved_model_dir, tag_set)
   signature_def = get_signature_def(meta_graph, signature_key)
   inputs, outputs = get_inputs_outputs(signature_def)
+  #ethan, inputs and outputs name are wrong
+  inspect_graph("freeze_saved_model_1")
 
   # Check SavedModel for assets directory.
   collection_def = meta_graph.collection_def

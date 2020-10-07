@@ -42,7 +42,7 @@ def do_load_model(name):
         return sess, meta_info_def
 
     except Exception as ex:
-        print("\n** Exception: {}".format(ex))
+        prompt_red("\n** Exception: {}".format(ex))
         traceback.print_exc()
         return None, None
 
@@ -95,6 +95,32 @@ def do_predict_test_set(sess, meta_info_def):
     return True
 
 
+def check_signature_def(sess, meta_graph_def):
+    from tensorflow.python.saved_model import signature_def_utils
+    from tensorflow.python.saved_model import signature_constants
+    op_signature_key = signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+    print(op_signature_key)
+    import_scope = None
+
+    if op_signature_key not in meta_graph_def.signature_def:
+        return None
+
+    print(meta_graph_def.signature_def)
+    sdef = meta_graph_def.signature_def[op_signature_key]
+    prompt_blue(sdef)
+
+    try:
+        op_sdef = signature_def_utils.load_op_from_signature_def(sdef, 
+                                                                op_signature_key,
+                                                                import_scope=import_scope)
+        print(op_sdef)
+        return op_sdef
+    except Exception as ex:
+        prompt_red("\n** Exception: {}".format(ex))
+        traceback.print_exc()
+    return None
+
+
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
     name = "100"
 
@@ -102,5 +128,6 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
         name = sys.argv[1]
 
     sess, meta_info_def = do_load_model(name)
+    check_signature_def(sess, meta_info_def)
     if sess is not None:
         do_predict_test_set(sess, meta_info_def)
