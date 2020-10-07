@@ -91,8 +91,12 @@ def one_hot(y_, n_classes=n_classes):
 
 
 # %% [markdown]
-# ## Utility functions for training:
+cnc = tf.constant(n_classes, name="my_n_classes")
+cns = tf.constant(n_steps, name="my_n_steps")
+cni = tf.constant(n_input, name="my_n_input")
+cnh = tf.constant(n_hidden, name="my_n_hidden")
 
+# ## Utility functions for training:    
 # %%
 def LSTM_RNN(_X, _weights, _biases):
     # Function returns a tensorflow LSTM (RNN) artificial neural network from given parameters. 
@@ -105,6 +109,7 @@ def LSTM_RNN(_X, _weights, _biases):
     # input shape: (batch_size, n_steps, n_input)
     _X = tf.transpose(_X, [1, 0, 2])  # permute n_steps and batch_size
     # Reshape to prepare input to hidden activation
+    #_X = tf.reshape(_X, [-1, n_input]) 
     _X = tf.reshape(_X, [-1, n_input]) 
     # new shape: (n_steps*batch_size, n_input)
     
@@ -134,6 +139,7 @@ def LSTM_RNN(_X, _weights, _biases):
 inspect_graph("start")
 
 # Graph input/output
+
 with tf.name_scope("Input"):
     # 128 steps 9 input
     x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
@@ -171,7 +177,6 @@ with tf.name_scope("Accuray"):
     accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32), name="accuracy")
     accuracy = tf.identity(accuracy, name="my_accuracy")
 
-inspect_graph("input/output graph")
 # %% [markdown]
 
 init = tf.global_variables_initializer()

@@ -72,6 +72,8 @@ def do_predict_test_set(sess, meta_info_def):
     y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
     pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
+    nc = sess.graph.get_tensor_by_name("my_n_classes")
+    print(x, y, pred, accuracy, nc)
     one_hot_predictions, final_accuracy, = sess.run(
         [pred, accuracy],
         feed_dict={
