@@ -67,3 +67,10 @@ def prompt_red(*args):
 def prompt_blue(*args):
     with ConsoleColor(ConsoleColor.BLUE):
         print(*args)
+
+
+def prompt_progress(*args):
+    import datetime
+    now = datetime.datetime.now()
+    with ConsoleColor(ConsoleColor.CYAN):
+        print(str(now), *args)

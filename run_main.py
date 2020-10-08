@@ -6,12 +6,14 @@ import traceback
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 from sklearn import metrics
+
+print("import tf")
+import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 
 from s_save_model import save_model_pb, save_model_ses
 from s_graph import inspect_graph, get_summary_writer, add_summary
-from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
+from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red, prompt_progress
 from s_data_loader import load_all
 # load dataset from data_loader
 dh = load_all()
@@ -148,7 +150,7 @@ def LSTM_RNN(_X, _weights, _biases):
 inspect_graph("start")
 
 # Graph input/output
-
+prompt_progress("Input/Output")
 with tf.name_scope("Input"):
     # 128 steps 9 input
     x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
@@ -156,7 +158,7 @@ with tf.name_scope("Output"):
     # 6 classified result
     y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
 
-
+prompt_progress("Model")
 with tf.name_scope("Model"):
     # Graph weights
     weights = {
@@ -171,23 +173,26 @@ with tf.name_scope("Model"):
     pred = LSTM_RNN(x, weights, biases)
     pred = tf.identity(pred, name="my_pred")
 
+prompt_progress("Loss")
 with tf.name_scope("Loss"):
     # Loss, optimizer and evaluation
     _l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
 
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + _l2 # Softmax loss
 
+prompt_progress("Optimizer")
 with tf.name_scope("Optimizer"):
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
     # optimizer = tf.identity(optimizer, name="my_optimizer")
 
+prompt_progress("Accuray")
 with tf.name_scope("Accuray"):
     _correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1), name="_correct_pred")
     accuracy = tf.reduce_mean(tf.cast(_correct_pred, tf.float32), name="accuracy")
     accuracy = tf.identity(accuracy, name="my_accuracy")
 
 # %% [markdown]
-
+prompt_progress("init")
 init = tf.global_variables_initializer()
 
 # Create a summary to monitor cost tensor
@@ -201,7 +206,7 @@ merged_summary_op = tf.summary.merge_all()
 # %%
 # To keep track of training's performance
 # Launch the graph
-
+prompt_progress("SessionInit")
 sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': len(list_gpu)}))
 sess.run(init)
 inspect_graph("after_init")
@@ -234,7 +239,7 @@ def save_model_pred(sess, step):
 
 
 # Perform Training steps with "batch_size" amount of example data at each loop
-
+prompt_progress("SessionLoopStart")
 step = 1
 while step * batch_size <= training_iters:
     batch_xs = extract_batch_size(X_train, step, batch_size)
