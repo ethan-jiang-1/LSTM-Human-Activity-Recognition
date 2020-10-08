@@ -22,6 +22,8 @@ import warnings
 import enum
 from six import PY3
 
+from xt_tf.xs_utils import prompt_blue
+
 from google.protobuf import text_format as _text_format
 from google.protobuf.message import DecodeError
 from tensorflow.core.framework import graph_pb2 as _graph_pb2
@@ -972,6 +974,9 @@ class TFLiteConverter(TFLiteConverterBase):
         "dump_graphviz_dir": self.dump_graphviz_dir,
         "dump_graphviz_video": self.dump_graphviz_video
     })
+
+    for key in converter_kwargs:
+      prompt_blue(key, converter_kwargs[key])
 
     # Converts model.
     if self._has_valid_tensors():

@@ -185,13 +185,13 @@ def freeze_saved_model(saved_model_dir, input_arrays, input_shapes,
       input_arrays or output_arrays are not valid.
   """
   from xt_tf.xs_utils import inspect_graph
-  inspect_graph("freeze_saved_model_0")
+
   # Read SignatureDef.
   meta_graph = get_meta_graph_def(saved_model_dir, tag_set)
   signature_def = get_signature_def(meta_graph, signature_key)
   inputs, outputs = get_inputs_outputs(signature_def)
-  #ethan, inputs and outputs name are wrong
-  inspect_graph("freeze_saved_model_1")
+  #ethan, inputs and outputs name were wrong, corrected already !
+  inspect_graph("freeze_saved_model_1", graph=meta_graph)
 
   # Check SavedModel for assets directory.
   collection_def = meta_graph.collection_def
@@ -209,4 +209,8 @@ def freeze_saved_model(saved_model_dir, input_arrays, input_shapes,
     util.set_tensor_shapes(in_tensors, input_shapes)
 
     frozen_graph_def = util.freeze_graph(sess, in_tensors, out_tensors)
+
+    inspect_graph("freeze_saved_model_A", graph=graph)
+    inspect_graph("freeze_saved_model_B", graph=sess.graph)
+    inspect_graph("freeze_saved_model_C", graph=frozen_graph_def)
     return frozen_graph_def, in_tensors, out_tensors, sess.graph

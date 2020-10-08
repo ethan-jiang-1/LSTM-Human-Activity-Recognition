@@ -17,11 +17,11 @@ using_v2 = False
 def find_converter(model_name):
 
     if not using_v2:
-        print("Using Normal Converter")
+        print("Using V1 Converter")
         # from tensorflow.lite.python.lite import TFLiteConverter as tfc
         from xt_tf.xa_lite import TFLiteConverter as tfc
         converter = tfc.from_saved_model("./" + model_name)
-        converter.allow_custom_ops = True
+        # converter.allow_custom_ops = True
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.target_spec.supported_types = [tf.float32]
 
