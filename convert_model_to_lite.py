@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# encoding:utf8
+
 # Version 1.0.0 (some previous versions are used in past commits)
 from inspect import signature
 from operator import truediv
