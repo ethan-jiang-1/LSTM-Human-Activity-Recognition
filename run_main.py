@@ -21,6 +21,8 @@ y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
 
+list_gpu = tf.config.experimental.list_physical_devices('GPU')
+prompt_yellow("Num GPUs Available: ", list_gpu, len(list_gpu))
 tf.enable_resource_variables()
 tf.logging.set_verbosity(tf.logging.ERROR)
 
@@ -199,8 +201,8 @@ merged_summary_op = tf.summary.merge_all()
 # %%
 # To keep track of training's performance
 # Launch the graph
-inspect_graph("before_init")
-sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
+
+sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': len(list_gpu)}))
 sess.run(init)
 inspect_graph("after_init")
 
