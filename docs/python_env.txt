@@ -1,3 +1,7 @@
 using python 3.6
 
 pip install tensorflow==1.15.4
+
+if got dll loading problem, try conda 
+
+conda install tensorflow==1.14.0

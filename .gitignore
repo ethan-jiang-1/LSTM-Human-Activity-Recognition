@@ -1,7 +1,8 @@
 .ipynb_checkpoints
 __pycache__
-___*
 ltsm_model-*
 model_save-*
 model_save*
 model_tflite*
+tmp
+!data/UCI HAR Dataset

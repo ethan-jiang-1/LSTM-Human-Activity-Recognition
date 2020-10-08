@@ -26,9 +26,15 @@ def inspect_graph(mark, sess=None):
 
 
 et_dir_name = '/tmp/LSTM_logs'
-if os.path.isdir(et_dir_name):
-    shutil.rmtree(et_dir_name)
-os.mkdir(et_dir_name)
+try:
+    if os.path.isdir(et_dir_name):
+        shutil.rmtree(et_dir_name)
+    os.mkdir(et_dir_name)
+except Exception as ex:
+    et_dir_name = "tmp"
+    if os.path.isdir(et_dir_name):
+        shutil.rmtree(et_dir_name)
+    os.mkdir(et_dir_name)
 et_summary_writer = None
 
 
