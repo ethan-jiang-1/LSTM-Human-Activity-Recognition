@@ -15,7 +15,7 @@ graph = tf.get_default_graph()
 
 def inspect_graph(mark, sess=None):
     if mark is not None:
-        prompt_yellow(mark)
+        prompt_yellow("inspect_graph:" + mark)
 
     cg = graph
     if sess is not None:

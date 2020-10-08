@@ -9,7 +9,6 @@ from s_console_prompt import ConsoleColor
 from s_graph import inspect_graph
 
 
-
 save_pb_enabled = True
 save_ses_enabled = True
 
@@ -55,6 +54,7 @@ def save_model_pb(ses, step, name, x, y, vx, vy, cx, cy):
     if not save_pb_enabled:
         return False
 
+    prompt_yellow("save_model_pb {}".format(step))
     inspect_graph("saved_model_0")
     dir_name = _prepare_save_dir(ses, step, name)
     # tx, ty = _prepare_io_data(ses, x, y, vx, vy)
