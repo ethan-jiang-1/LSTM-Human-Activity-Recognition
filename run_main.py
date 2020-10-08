@@ -96,6 +96,13 @@ cns = tf.constant(n_steps, name="my_n_steps")
 cni = tf.constant(n_input, name="my_n_input")
 cnh = tf.constant(n_hidden, name="my_n_hidden")
 
+cbatch_xs = extract_batch_size(X_test, 1, 1)
+cbatch_ys = extract_batch_size(y_test, 1, 1)
+cbatch_ys_oh = one_hot(cbatch_ys)
+
+ctx = tf.constant(cbatch_xs, name="my_c_input")
+cty = tf.constant(cbatch_ys_oh, name="my_c_output")
+
 # ## Utility functions for training:    
 # %%
 def LSTM_RNN(_X, _weights, _biases):
@@ -221,7 +228,7 @@ def save_model_pred(sess, step):
     prompt_yellow("actual", po_batch_one_ys_oh, po_batch_one_ys_oh.argmax(1))
     prompt_yellow("accuracy", po_accuracy)
     prompt_yellow("loss", po_final_loss)    
-    save_model_pb(sess, step, "model_save_" + str(step), x, y, po_batch_one_xs, po_batch_one_ys_oh)
+    save_model_pb(sess, step, "model_save_" + str(step), x, y, po_batch_one_xs, po_batch_one_ys_oh, ctx, cty)
 
 
 # Perform Training steps with "batch_size" amount of example data at each loop

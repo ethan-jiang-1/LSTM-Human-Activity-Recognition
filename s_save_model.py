@@ -7,8 +7,7 @@ import traceback
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_console_prompt import ConsoleColor
 from s_graph import inspect_graph
-#from tensorflow.python.saved_model import simple_save
-from xt_tf.xp_saved_model import simple_save
+
 
 
 save_pb_enabled = True
@@ -34,23 +33,31 @@ def _prepare_io_data(ses, x, y, vx, vy):
     #with tf.name_scope("Output"):
     #    ty = _add_name_to_tensor(vy, "my_y_output")
     # named_input_output = True
-    ctt_x = tf.convert_to_tensor(vx)
-    ctt_y = tf.convert_to_tensor(vy)
-    tx, ty = ses.run([ctt_x, ctt_y], feed_dict = {x:vx, y:vy}) 
+    tsx = tf.convert_to_tensor(vx)
+    tsy = tf.convert_to_tensor(vy)
+    cvx, cvy = ses.run([tsx, tsy], feed_dict = {x:vx, y:vy}) 
 
-    prompt_yellow("_prepare_io_data(tx,ty) {} {}".format(tx, ty)) 
-    prompt_yellow("_prepare_io_data(cttx, ctty) {} {}".format(ctt_x, ctt_y))
-    # return tx, ty
-    return ctt_x, ctt_y
+    tx = ses.graph.get_tensor_by_name("my_input")
+    if tx is None:
+        tx = tf.identity(tsx, name="my_input")
+    
+    ty = ses.graph.get_tensor_by_name("my_output")
+    if ty is None:
+        ty = tf.identity(tsy, name="my_output")
+
+    prompt_yellow("_prepare_io_data(cvx,cvy) {} {}".format(cvx, cvy)) 
+    prompt_yellow("_prepare_io_data(tx, ty) {} {}".format(tx, ty))
+
+    return tx, ty
 
 
-def save_model_pb(ses, step, name, x, y, vx, vy):
+def save_model_pb(ses, step, name, x, y, vx, vy, cx, cy):
     if not save_pb_enabled:
         return False
 
     inspect_graph("saved_model_0")
     dir_name = _prepare_save_dir(ses, step, name)
-    tx, ty = _prepare_io_data(ses, x, y, vx, vy)
+    # tx, ty = _prepare_io_data(ses, x, y, vx, vy)
     # prompt_green("tx: {}".format(tx))
     # prompt_green("ty: {}".format(ty))
     try:
@@ -61,16 +68,24 @@ def save_model_pb(ses, step, name, x, y, vx, vy):
         #                              outputs={"my_outputs": ty})
         
         # attemp2
-        simple_save(ses,
-                    dir_name,
-                    inputs={"x": tx},
-                    outputs={"y": ty})
+        # from xt_tf.xp_simple_save import simple_save
+        # simple_save(ses,
+        #             dir_name,
+        #             inputs={"x": tx},
+        #             outputs={"y": ty})
         
         # attemp3
         # builder = tf.saved_model.builder.SavedModelBuilder(dir_name)
         # builder.add_meta_graph_and_variables(
         #     ses, [tf.saved_model.tag_constants.SERVING])
         # builder.save()
+
+        # attemp4
+        from xt_tf.xp_simple_save import simple_save_ex
+        simple_save_ex(ses,
+                 dir_name,
+                 inputs={"x": cx},
+                 outputs={"y": cy})
 
         prompt_green("\n\n**model {} saved.".format(step))
         inspect_graph("saved_model_1")
