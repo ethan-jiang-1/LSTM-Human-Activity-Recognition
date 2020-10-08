@@ -26,7 +26,7 @@ def _prepare_save_dir(ses, step, name):
     return dir_name
 
 
-def _prepare_io_data(ses, x, y, vx, vy):
+def _prepare_io_tensor(ses, x, y, vx, vy):
     #with tf.name_scope("Input"):
     #    tx = _add_name_to_tensor(vx, "my_x_input")
     #with tf.name_scope("Output"):
@@ -36,16 +36,16 @@ def _prepare_io_data(ses, x, y, vx, vy):
     tsy = tf.convert_to_tensor(vy)
     cvx, cvy = ses.run([tsx, tsy], feed_dict = {x:vx, y:vy}) 
 
-    tx = ses.graph.get_tensor_by_name("my_input")
+    tx = ses.graph.get_tensor_by_name("my_input:0")
     if tx is None:
         tx = tf.identity(tsx, name="my_input")
     
-    ty = ses.graph.get_tensor_by_name("my_output")
+    ty = ses.graph.get_tensor_by_name("my_output:0")
     if ty is None:
         ty = tf.identity(tsy, name="my_output")
 
-    prompt_yellow("_prepare_io_data(cvx,cvy) {} {}".format(cvx, cvy)) 
-    prompt_yellow("_prepare_io_data(tx, ty) {} {}".format(tx, ty))
+    prompt_yellow("_prepare_io_tensor, value(cvx,cvy) {} {}".format(cvx, cvy)) 
+    prompt_yellow("_prepare_io_tensor, finial(tx, ty) {} {}".format(tx, ty))
 
     return tx, ty
 
@@ -57,7 +57,7 @@ def save_model_pb(ses, step, name, x, y, vx, vy, cx, cy):
     prompt_yellow("save_model_pb {}".format(step))
     inspect_graph("saved_model_0")
     dir_name = _prepare_save_dir(ses, step, name)
-    # tx, ty = _prepare_io_data(ses, x, y, vx, vy)
+    # tx, ty = _prepare_io_tensor(ses, x, y, vx, vy)
     # prompt_green("tx: {}".format(tx))
     # prompt_green("ty: {}".format(ty))
     try:
