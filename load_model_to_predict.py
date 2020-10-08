@@ -109,11 +109,13 @@ def check_signature_def(sess, meta_graph_def):
     sdef = meta_graph_def.signature_def[op_signature_key]
     prompt_blue(sdef)
 
+    tensor_info_outputs = sdef.outputs
+    op_outputs_signature_key = "y"
     try:
         op_sdef = signature_def_utils.load_op_from_signature_def(sdef, 
-                                                                op_signature_key,
-                                                                import_scope=import_scope)
-        print(op_sdef)
+                                                                 op_outputs_signature_key,
+                                                                 import_scope=import_scope)
+        prompt_green(op_sdef)
         return op_sdef
     except Exception as ex:
         prompt_red("\n** Exception: {}".format(ex))
