@@ -31,7 +31,8 @@ try:
         shutil.rmtree(et_dir_name)
     os.mkdir(et_dir_name)
 except Exception as ex:
-    et_dir_name = "tmp"
+    print("try different folder: {}".format(ex))
+    et_dir_name = os.path.abspath("/tmp")
     if os.path.isdir(et_dir_name):
         shutil.rmtree(et_dir_name)
     os.mkdir(et_dir_name)
