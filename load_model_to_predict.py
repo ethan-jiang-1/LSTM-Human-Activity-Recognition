@@ -72,8 +72,7 @@ def do_predict_test_set(sess, meta_info_def):
     y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
     pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
-    nc = sess.graph.get_tensor_by_name("my_n_classes")
-    print(x, y, pred, accuracy, nc)
+    print(x, y, pred, accuracy)
     one_hot_predictions, final_accuracy, = sess.run(
         [pred, accuracy],
         feed_dict={
@@ -95,23 +94,57 @@ def do_predict_test_set(sess, meta_info_def):
     return True
 
 
+def check_graph(sess, meta_graph_def):
+    try:
+        inspect_graph("check_graph")
+
+        x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
+        y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
+        pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
+        accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
+        print(x, y, pred, accuracy)
+
+        op_x = sess.graph.get_operation_by_name('Input/my_x_input')
+        op_y = sess.graph.get_operation_by_name('Output/my_y_output')
+        op_pred = sess.graph.get_operation_by_name('Model/my_pred')
+        op_accuracy = sess.graph.get_operation_by_name('Accuray/my_accuracy')
+        print(op_x, op_y, op_pred, op_accuracy)
+
+        ctx = sess.graph.get_tensor_by_name("my_c_input:0")
+        cty = sess.graph.get_tensor_by_name("my_c_output:0")
+        op_ctx = sess.graph.get_operation_by_name("my_c_input")
+        op_cty = sess.graph.get_operation_by_name("my_c_output")
+        print(ctx, cty, op_ctx, op_cty)
+
+        nc = sess.graph.get_operation_by_name("my_n_classes")
+        print(nc)
+
+        return True
+    except Exception as ex:
+        prompt_red("\n** Exception: {}".format(ex))
+        traceback.print_exc()
+    return False
+
+
 def check_signature_def(sess, meta_graph_def):
     from tensorflow.python.saved_model import signature_def_utils
     from tensorflow.python.saved_model import signature_constants
-    op_signature_key = signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
-    print(op_signature_key)
-    import_scope = None
 
-    if op_signature_key not in meta_graph_def.signature_def:
-        return None
-
-    print(meta_graph_def.signature_def)
-    sdef = meta_graph_def.signature_def[op_signature_key]
-    prompt_blue(sdef)
-
-    tensor_info_outputs = sdef.outputs
-    op_outputs_signature_key = "y"
     try:
+        op_signature_key = signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY
+        print(op_signature_key)
+        import_scope = None
+
+        if op_signature_key not in meta_graph_def.signature_def:
+            return None
+
+        print(meta_graph_def.signature_def)
+        sdef = meta_graph_def.signature_def[op_signature_key]
+        prompt_blue(sdef)
+
+        tensor_info_outputs = sdef.outputs
+        op_outputs_signature_key = "y"
+
         op_sdef = signature_def_utils.load_op_from_signature_def(sdef, 
                                                                  op_outputs_signature_key,
                                                                  import_scope=import_scope)
@@ -130,6 +163,7 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
         name = sys.argv[1]
 
     sess, meta_info_def = do_load_model(name)
-    check_signature_def(sess, meta_info_def)
-    if sess is not None:
-        do_predict_test_set(sess, meta_info_def)
+    if check_graph(sess, meta_info_def):
+        check_signature_def(sess, meta_info_def)
+        if sess is not None:
+            do_predict_test_set(sess, meta_info_def)

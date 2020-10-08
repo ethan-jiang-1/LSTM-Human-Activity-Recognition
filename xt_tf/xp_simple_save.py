@@ -142,6 +142,8 @@ def simple_save_ex(session, export_dir, inputs, outputs, legacy_init_op=None):
     """
     signature_def_map = {
         signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+            signature_def_utils.predict_signature_def(inputs, outputs),
+        signature_constants.PREDICT_METHOD_NAME:
             signature_def_utils.predict_signature_def(inputs, outputs)
     }
     b = builder.SavedModelBuilder(export_dir)
