@@ -25,11 +25,6 @@ def _prepare_save_dir(ses, step, name):
 
 
 def _prepare_io_tensor(ses, x, y, vx, vy):
-    #with tf.name_scope("Input"):
-    #    tx = _add_name_to_tensor(vx, "my_x_input")
-    #with tf.name_scope("Output"):
-    #    ty = _add_name_to_tensor(vy, "my_y_output")
-    # named_input_output = True
     tsx = tf.convert_to_tensor(vx)
     tsy = tf.convert_to_tensor(vy)
     cvx, cvy = ses.run([tsx, tsy], feed_dict = {x:vx, y:vy}) 
@@ -48,7 +43,7 @@ def _prepare_io_tensor(ses, x, y, vx, vy):
     return tx, ty
 
 
-def _save_pred_model_pb(ses, step, name, x, y, vx, vy, cx, cy):
+def _save_pred_model_pb(ses, step, name, x, y, vx, vy, cx, cy, pred):
     prompt_yellow("_save_pred_model_pb {}".format(step))
     inspect_graph("saved_model_0")
     dir_name = _prepare_save_dir(ses, step, name)
@@ -87,7 +82,7 @@ def _save_pred_model_pb(ses, step, name, x, y, vx, vy, cx, cy):
         simple_save_ex(ses,
                  dir_name,
                  inputs={"x": x},
-                 outputs={"y": y})
+                 outputs={"y": pred})
 
         # attemp6
         # ti_input_x = tf.saved_model.utils.build_tensor_info(x)
@@ -142,11 +137,10 @@ class PredModelSaver(object):
         pred_mv = sess.run(
             [pred],
             feed_dict={
-                x: one_xs,
-                y: one_ys_oh
+                x: one_xs
             }
         )
         prompt_yellow("pred  ", pred_mv)
         prompt_yellow("actual", one_ys_oh)
-        _save_pred_model_pb(sess, step, "model_save_" + str(step), x, y, one_xs, one_ys_oh, ctx, cty)
+        _save_pred_model_pb(sess, step, "model_save_" + str(step), x, y, one_xs, one_ys_oh, ctx, cty, pred)
         return True

@@ -161,11 +161,12 @@ def LSTM_RNN(_X, _weights, _biases):
 # %% [markdown]
 # ## Let's get serious and build the neural network:
 # Graph input/output
-prompt_progress("Input/Output")
-# 128 steps 9 input
-x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
-# 6 classified result
-y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
+with tf.name_scope("Input"):
+    # 128 steps 9 input
+    x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
+    # 6 classified result
+    y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_input")
+
 inspect_graph("start")
 
 prompt_progress("Model")
@@ -181,6 +182,8 @@ with tf.name_scope("Model"):
         'out': tf.Variable(tf.random_normal([n_classes]), name="biases_out")
     }    
     pred = LSTM_RNN(x, weights, biases)
+
+with tf.name_scope("Output"):
     pred = tf.identity(pred, name="my_pred")
 
 prompt_progress("Loss")

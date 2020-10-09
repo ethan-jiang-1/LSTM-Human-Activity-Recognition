@@ -77,9 +77,9 @@ def do_predict_test_set(sess, meta_info_def):
     
     # Accuracy for test data
     y_test_oh = one_hot(y_test)
-    x = sess.graph.get_tensor_by_name('my_x_input:0')
-    y = sess.graph.get_tensor_by_name('my_y_output:0')
-    pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
+    x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
+    y = sess.graph.get_tensor_by_name('Input/my_y_input:0')
+    pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
     print(x, y, pred, accuracy)
     one_hot_predictions, final_accuracy, = sess.run(
@@ -107,15 +107,15 @@ def check_graph(sess, meta_graph_def):
     try:
         inspect_graph("check_graph")
 
-        x = sess.graph.get_tensor_by_name('my_x_input:0')
-        y = sess.graph.get_tensor_by_name('my_y_output:0')
-        pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
+        x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
+        y = sess.graph.get_tensor_by_name('Input/my_y_input:0')
+        pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
         accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
         print(x, y, pred, accuracy)
 
-        op_x = sess.graph.get_operation_by_name('my_x_input')
-        op_y = sess.graph.get_operation_by_name('my_y_output')
-        op_pred = sess.graph.get_operation_by_name('Model/my_pred')
+        op_x = sess.graph.get_operation_by_name('Input/my_x_input')
+        op_y = sess.graph.get_operation_by_name('Input/my_y_input')
+        op_pred = sess.graph.get_operation_by_name('Output/my_pred')
         op_accuracy = sess.graph.get_operation_by_name('Accuray/my_accuracy')
         print(op_x, op_y, op_pred, op_accuracy)
 

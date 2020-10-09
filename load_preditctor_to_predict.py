@@ -69,38 +69,30 @@ def one_hot(y_, n_classes=n_classes):
     return np.eye(n_classes, dtype=np.int32)[np.array(y_, dtype=np.int32)]
 
 
-def do_predict_test_set(smp):
+def do_predict_test_set_all(smp):
     if smp is None:
         return False
 
-    inspect_graph("do_predict_test_set", graph=smp.graph)
+    inspect_graph("do_predict_test_set_all", graph=smp.graph)
 
     sess = smp.session
 
     # Accuracy for test data
-    y_test_oh = one_hot(y_test)
     x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
-    pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
-    accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
-    print(x, y, pred, accuracy)
-    one_hot_predictions, final_accuracy, = sess.run(
-        [pred, accuracy],
+    pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
+    one_hot_predictions = sess.run(
+        pred,
         feed_dict={
-            x: X_test,
-            y: y_test_oh
+            x: X_test
         }
     )
     predictions = one_hot_predictions.argmax(1)
 
-    print("Testing Accuracy: {}% over {}".format(
-        100 * final_accuracy, len(y_test_oh)))
-    print("")
-    print("Precision: {}%".format(
+    print("Precision: {:.4f}%".format(
         100 * metrics.precision_score(y_test, predictions, average="weighted")))
-    print("Recall: {}%".format(
+    print("Recall: {:.4f}%".format(
         100 * metrics.recall_score(y_test, predictions, average="weighted")))
-    print("f1_score: {}%".format(
+    print("f1_score: {:.4f}%".format(
         100 * metrics.f1_score(y_test, predictions, average="weighted")))
 
     return True
@@ -117,28 +109,21 @@ def do_predict_test_set_skip_A(smp):
     skip_ratio = 10
 
     # Accuracy for test data
-    y_test_oh = one_hot(y_test[::skip_ratio])
     x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
-    pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
-    accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
-    print(x, y, pred, accuracy)
-    one_hot_predictions, final_accuracy, = sess.run(
-        [pred, accuracy],
+    pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
+    one_hot_predictions = sess.run(
+        pred,
         feed_dict={
             x: X_test[::skip_ratio],
-            y: y_test_oh
         }
     )
     predictions = one_hot_predictions.argmax(1)
 
-    print("Testing Accuracy: {}% over {} data".format(100 * final_accuracy, len(y_test_oh)))
-    print("")
-    print("Precision: {}%".format(
+    print("Precision: {:.4f}%".format(
         100 * metrics.precision_score(y_test[::skip_ratio], predictions, average="weighted")))
-    print("Recall: {}%".format(
+    print("Recall: {:.4f}%".format(
         100 * metrics.recall_score(y_test[::skip_ratio], predictions, average="weighted")))
-    print("f1_score: {}%".format(
+    print("f1_score: {:.4f}%".format(
         100 * metrics.f1_score(y_test[::skip_ratio], predictions, average="weighted")))
 
     return True
@@ -155,30 +140,55 @@ def do_predict_test_set_skip_B(smp):
     skip_ratio = 100
 
     # Accuracy for test data
-    y_test_oh = one_hot(y_test[::skip_ratio])
     x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
-    pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
-    accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
-    print(x, y, pred, accuracy)
-    one_hot_predictions, final_accuracy, = sess.run(
-        [pred, accuracy],
+    pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
+    one_hot_predictions = sess.run(
+        pred,
         feed_dict={
             x: X_test[::skip_ratio],
-            y: y_test_oh
         }
     )
     predictions = one_hot_predictions.argmax(1)
 
-    print("Testing Accuracy: {}% over {} data".format(100 * final_accuracy, len(y_test_oh)))
-    print("")
-    print("Precision: {}%".format(
+    print("Precision: {:.4f}%".format(
         100 * metrics.precision_score(y_test[::skip_ratio], predictions, average="weighted")))
-    print("Recall: {}%".format(
+    print("Recall: {:.4f}%".format(
         100 * metrics.recall_score(y_test[::skip_ratio], predictions, average="weighted")))
-    print("f1_score: {}%".format(
+    print("f1_score: {:.4f}%".format(
         100 * metrics.f1_score(y_test[::skip_ratio], predictions, average="weighted")))
 
+    return True
+
+
+def do_predict_test_set_one_C(smp):
+    if smp is None:
+        return False
+
+    inspect_graph("do_predict_test_set_one_C", graph=smp.graph)
+
+    sess = smp.session
+
+    # Accuracy for test data
+    x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
+    pred = sess.graph.get_tensor_by_name('Output/my_pred:0')
+
+    matched = 0
+    unmatched = 0
+    for cn in range(0, len(y_test)):
+        one_hot_predictions = sess.run(
+            pred,
+            feed_dict={
+                x: X_test[cn:cn+1],
+            }
+        )
+        pred_v = one_hot_predictions.argmax(1)
+        real_v = y_test[cn:cn+1]
+        # print(pred_v, real_v)
+        if pred_v[0] == real_v[0][0]:
+            matched += 1
+        else:
+            unmatched += 1
+    print("accuracy one by one: {:4f} on {}/{}".format((float(matched)/float(matched+unmatched)), matched, unmatched))
     return True
 
 
@@ -189,42 +199,33 @@ def do_predict_test_one_X(smp):
     inspect_graph("do_predict_test_one_X", graph=smp.graph)
 
     matched = 0
-    not_machted = 0
-    for step in range(0, 100):
-        #prompt_yellow("predict {}".format(step))
-        # po_batch_one_xs = extract_batch_size(X_test, step, 1)
-        po_batch_one_xs = X_test[step:step+1]
-        #print("X_test", po_batch_one_xs.shape, po_batch_one_xs)
-        pred = smp({"x": po_batch_one_xs})
-        po_one_hot_predictions = pred["y"]
-        p_max = po_one_hot_predictions.argmax(1)
-        #prompt_yellow("pred", po_one_hot_predictions,
-        #            po_one_hot_predictions.argmax(1))
+    unmatched = 0
+    for cn in range(0, len(y_test)):
+        input_one = X_test[cn:cn+1]
+        outputs = smp({"x": input_one})
+        pred_v = outputs["y"].argmax(1)
+        real_v = y_test[cn:cn+1]
 
-        #po_batch_one_ys = extract_batch_size(y_test, step, 1)
-        po_batch_one_ys = y_test[step:step+1]
-        #print("y_test", po_batch_one_ys.shape, po_batch_one_ys)
-        po_batch_one_ys_oh = one_hot(po_batch_one_ys)
-        r_max = po_batch_one_ys_oh.argmax(1)
-        #prompt_yellow("real", po_batch_one_ys_oh, po_batch_one_ys_oh.argmax(1))
-        if p_max == r_max:
-            prompt_green("{} predict and actual are matched: {} {}".format(step, p_max, r_max))
+        # print(pred_v, real_v)
+        if pred_v[0] == real_v[0][0]:
             matched += 1
         else:
-            prompt_red("{} predict and actual not matched: {} {}".format(step, p_max, r_max))
-            not_machted += 1
-    prompt_yellow("matched/mot_matched: {}/{}".format(matched, not_machted))
+            unmatched += 1
+    print("accuracy one by one: {:4f} on {}/{}".format(
+        (float(matched) / float(matched + unmatched)), matched, unmatched))
+    return True
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    name = "9999"
+    name = "500"
 
     if len(sys.argv) >= 2:
         name = sys.argv[1]
 
     smp = do_load_predictor(name)
     if smp is not None:
-        do_predict_test_set(smp)
+        do_predict_test_set_all(smp)
         do_predict_test_set_skip_A(smp)
         do_predict_test_set_skip_B(smp)
+        do_predict_test_set_one_C(smp)
         do_predict_test_one_X(smp)
