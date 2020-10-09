@@ -30,7 +30,7 @@ from tensorflow.core.framework import graph_pb2 as _graph_pb2
 from tensorflow.lite.experimental.examples.lstm.rnn import dynamic_rnn  # pylint: disable=unused-import
 from tensorflow.lite.experimental.examples.lstm.rnn_cell import TFLiteLSTMCell  # pylint: disable=unused-import
 from tensorflow.lite.experimental.examples.lstm.rnn_cell import TfLiteRNNCell  # pylint: disable=unused-import
-from tensorflow.lite.experimental.microfrontend.python.ops import audio_microfrontend_op  # pylint: disable=unused-import
+## from tensorflow.lite.experimental.microfrontend.python.ops import audio_microfrontend_op  # pylint: disable=unused-import
 from tensorflow.lite.experimental.tensorboard.ops_util import get_potentially_supported_ops  # pylint: disable=unused-import
 from tensorflow.lite.python import lite_constants as constants
 from tensorflow.lite.python.convert import build_toco_convert_protos  # pylint: disable=unused-import
@@ -42,14 +42,15 @@ from tensorflow.lite.python.convert import toco_convert_impl as _toco_convert_im
 from tensorflow.lite.python.convert import toco_convert_protos  # pylint: disable=unused-import
 #from tensorflow.lite.python.convert_saved_model import freeze_saved_model as _freeze_saved_model
 from xt_tf.xa_convert_saved_model import freeze_saved_model as _freeze_saved_model
+
 from tensorflow.lite.python.interpreter import Interpreter  # pylint: disable=unused-import
-from tensorflow.lite.python.interpreter import load_delegate  # pylint: disable=unused-import
+## from tensorflow.lite.python.interpreter import load_delegate  # pylint: disable=unused-import
 from tensorflow.lite.python.op_hint import convert_op_hints_to_stubs  # pylint: disable=unused-import
 from tensorflow.lite.python.op_hint import OpHint  # pylint: disable=unused-import
 from tensorflow.lite.python.optimize import calibrator as _calibrator
-from tensorflow.lite.python.util import build_debug_info_func as _build_debug_info_func
+## from tensorflow.lite.python.util import build_debug_info_func as _build_debug_info_func
 from tensorflow.lite.python.util import freeze_graph as _freeze_graph
-from tensorflow.lite.python.util import get_debug_info as _get_debug_info
+## from tensorflow.lite.python.util import get_debug_info as _get_debug_info
 from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import get_tensor_name as _get_tensor_name
 from tensorflow.lite.python.util import get_tensors_from_tensor_names as _get_tensors_from_tensor_names
@@ -435,8 +436,8 @@ class TFLiteConverterV2(TFLiteConverterBase):
 
     self._validate_quantization()
     self._validate_representative_dataset()
-    self._debug_info = _get_debug_info(
-        _build_debug_info_func(self._funcs[0].graph), graph_def)
+    ## self._debug_info = _get_debug_info(
+    ##     _build_debug_info_func(self._funcs[0].graph), graph_def)
     converter_kwargs = self._get_base_converter_args()
 
     # Converts model.
@@ -630,8 +631,8 @@ class TFLiteConverter(TFLiteConverterBase):
     return cls(
         graph_def,
         input_tensors,
-        output_tensors,
-        experimental_debug_info_func=_build_debug_info_func(sess.graph))
+        output_tensors) 
+        ## experimental_debug_info_func=_build_debug_info_func(sess.graph))
 
   @classmethod
   def from_frozen_graph(cls,
@@ -764,8 +765,8 @@ class TFLiteConverter(TFLiteConverterBase):
     return cls(
         graph_def=result[0],
         input_tensors=result[1],
-        output_tensors=result[2],
-        experimental_debug_info_func=_build_debug_info_func(result[3]))
+        output_tensors=result[2])
+        ## experimental_debug_info_func=_build_debug_info_func(result[3]))
 
   @classmethod
   def from_keras_model_file(cls,
@@ -811,9 +812,9 @@ class TFLiteConverter(TFLiteConverterBase):
       return cls(
           frozen_func.graph.as_graph_def(),
           frozen_func.inputs,
-          frozen_func.outputs,
-          experimental_debug_info_func=_build_debug_info_func(
-              frozen_func.graph))
+          frozen_func.outputs)
+          ## experimental_debug_info_func=_build_debug_info_func(
+          #    frozen_func.graph))
 
     # Handles Keras when Eager mode is disabled.
     _keras.backend.clear_session()
@@ -837,8 +838,8 @@ class TFLiteConverter(TFLiteConverterBase):
     return cls(
         graph_def,
         input_tensors,
-        output_tensors,
-        experimental_debug_info_func=_build_debug_info_func(sess.graph))
+        output_tensors)
+        ## experimental_debug_info_func=_build_debug_info_func(sess.graph))
 
   def __setattr__(self, name, value):
     if name == "post_training_quantize":
@@ -959,7 +960,7 @@ class TFLiteConverter(TFLiteConverterBase):
       except Exception:
         optimized_graph = self._graph_def
 
-    self._debug_info = _get_debug_info(self._debug_info_func, optimized_graph)
+    ## self._debug_info = _get_debug_info(self._debug_info_func, optimized_graph)
 
     converter_kwargs = self._get_base_converter_args()
     converter_kwargs.update({
@@ -974,6 +975,11 @@ class TFLiteConverter(TFLiteConverterBase):
         "dump_graphviz_dir": self.dump_graphviz_dir,
         "dump_graphviz_video": self.dump_graphviz_video
     })
+
+    ## for BC 1.14.0
+    converter_kwargs.pop("quantize_to_float16")
+    converter_kwargs.pop("debug_info")
+    converter_kwargs.pop("enable_mlir_converter")
 
     for key in converter_kwargs:
       prompt_blue(key, converter_kwargs[key])

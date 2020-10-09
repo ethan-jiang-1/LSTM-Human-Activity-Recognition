@@ -23,8 +23,13 @@ def find_converter(model_name):
         print("Using V1 Converter")
         # from tensorflow.lite.python.lite import TFLiteConverter as tfc
         from xt_tf.xa_lite import TFLiteConverter as tfc
+        # tick from https://github.com/tensorflow/tensorflow/issues/22106#issuecomment-520158185
+        # output_arrays = ['TFLite_Detection_PostProcess', 'TFLite_Detection_PostProcess:1',
+        #                    'TFLite_Detection_PostProcess:2', 'TFLite_Detection_PostProcess:3']
+        # converter = tfc.from_saved_model("./" + model_name, output_arrays=output_arrays)
         converter = tfc.from_saved_model("./" + model_name)
-        # converter.allow_custom_ops = True
+        # tick from https://github.com/tensorflow/tensorflow/issues/30524
+        converter.allow_custom_ops = True
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.target_spec.supported_types = [tf.float32]
 
