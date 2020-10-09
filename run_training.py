@@ -10,6 +10,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 import shutil
 import traceback
+import logging
 
 import numpy as np
 import matplotlib
@@ -19,11 +20,14 @@ from sklearn import metrics
 print("import tf")
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 
-from s_save_model import save_model_pb, save_model_ses
+from s_save_model import save_model_ses
+from s_save_pred import PredModelSaver
 from s_graph import inspect_graph, get_summary_writer, add_summary
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red, prompt_progress
 from s_data_loader import load_all
+
 # load dataset from data_loader
+prompt_progress("LoadDataset")
 dh = load_all()
 X_train = dh.X_train
 X_test = dh.X_test
@@ -31,11 +35,13 @@ y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
 
-
+#setup tf
+prompt_progress("InitializeTensorFlow")
 list_gpu = tf.config.experimental.list_physical_devices('GPU')
 prompt_yellow("Num GPUs Available: ", list_gpu, len(list_gpu))
 tf.enable_resource_variables()
 tf.logging.set_verbosity(tf.logging.ERROR)
+tf.get_logger().setLevel(logging.ERROR)
 
 # %% [markdown]
 # ## Additionnal Parameters:
@@ -104,17 +110,15 @@ def one_hot(y_, n_classes=n_classes):
 
 
 # %% [markdown]
-cnc = tf.constant(n_classes, name="my_n_classes")
-cns = tf.constant(n_steps, name="my_n_steps")
-cni = tf.constant(n_input, name="my_n_input")
-cnh = tf.constant(n_hidden, name="my_n_hidden")
+cnc = tf.constant(n_classes, name="my_cn_classes")
+cns = tf.constant(n_steps, name="my_cn_steps")
+cni = tf.constant(n_input, name="my_cn_input")
+# cnh = tf.constant(n_hidden, name="my_n_hidden")
 
 cbatch_xs = extract_batch_size(X_test, 1, 1)
-cbatch_ys = extract_batch_size(y_test, 1, 1)
-cbatch_ys_oh = one_hot(cbatch_ys)
-
-ctx = tf.constant(cbatch_xs, name="my_c_input")
-cty = tf.constant(cbatch_ys_oh, name="my_c_output")
+cbatch_ys_oh = one_hot(extract_batch_size(y_test, 1, 1))
+ctx = tf.constant(cbatch_xs, name="my_ca1_input")
+cty = tf.constant(cbatch_ys_oh, name="my_ca1_output")
 
 # ## Utility functions for training:    
 # %%
@@ -156,16 +160,13 @@ def LSTM_RNN(_X, _weights, _biases):
 
 # %% [markdown]
 # ## Let's get serious and build the neural network:
-inspect_graph("start")
-
 # Graph input/output
 prompt_progress("Input/Output")
-with tf.name_scope("Input"):
-    # 128 steps 9 input
-    x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
-with tf.name_scope("Output"):
-    # 6 classified result
-    y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
+# 128 steps 9 input
+x = tf.placeholder(tf.float32, [None, n_steps, n_input], name="my_x_input")
+# 6 classified result
+y = tf.placeholder(tf.float32, [None, n_classes], name="my_y_output")
+inspect_graph("start")
 
 prompt_progress("Model")
 with tf.name_scope("Model"):
@@ -230,21 +231,10 @@ writer = get_summary_writer(sess)
 
 def save_model_pred(sess, step):
     prompt_yellow("save_model_pred {}".format(step))
-    po_batch_one_xs = extract_batch_size(X_test, step, 1)
-    po_batch_one_ys = extract_batch_size(y_test, step, 1)
-    po_batch_one_ys_oh = one_hot(po_batch_one_ys)
-    po_one_hot_predictions, po_accuracy, po_final_loss = sess.run(
-        [pred, accuracy, cost],
-        feed_dict={
-            x: po_batch_one_xs,
-            y: po_batch_one_ys_oh
-        }
-    )
-    prompt_yellow("pred", po_one_hot_predictions, po_one_hot_predictions.argmax(1))
-    prompt_yellow("actual", po_batch_one_ys_oh, po_batch_one_ys_oh.argmax(1))
-    prompt_yellow("accuracy", po_accuracy)
-    prompt_yellow("loss", po_final_loss)    
-    save_model_pb(sess, step, "model_save_" + str(step), x, y, po_batch_one_xs, po_batch_one_ys_oh, ctx, cty)
+    one_xs = extract_batch_size(X_test, step, 1)
+    one_ys_oh = one_hot(extract_batch_size(y_test, step, 1))
+    pms = PredModelSaver(sess, step, pred, one_xs, one_ys_oh, x, y, ctx, cty)
+    return pms.save()
 
 
 # Perform Training steps with "batch_size" amount of example data at each loop
@@ -324,105 +314,12 @@ sess.close()
 # %%
 # (Inline plots: )
 # get_ipython().run_line_magic('matplotlib', 'inline')
+pred_test = one_hot_predictions.argmax(1)
 
-font = {
-    'family' : 'Bitstream Vera Sans',
-    'weight' : 'bold',
-    'size'   : 12
-}
-matplotlib.rc('font', **font)
+from s_plot import plot_traning, print_accuracy, plot_confusion
+plot_traning(batch_size, train_losses, train_accuracies, training_iters,
+                 test_losses, test_accuracies, display_iter)
 
-width = 9
-height = 6
-plt.figure(figsize=(width, height))
+print_accuracy(final_accuracy, pred_test, y_test, X_test)
 
-indep_train_axis = np.array(range(batch_size, (len(train_losses)+1)*batch_size, batch_size))
-plt.plot(indep_train_axis, np.array(train_losses), "b--", label="Train losses")
-plt.plot(indep_train_axis, np.array(train_accuracies), "g--", label="Train accuracies")
-
-indep_test_axis = np.append(
-    np.array(range(batch_size, len(test_losses)*display_iter, display_iter)[:-1]),
-    [training_iters]
-)
-plt.plot(indep_test_axis, np.array(test_losses), "b-", label="Test losses")
-plt.plot(indep_test_axis, np.array(test_accuracies), "g-", label="Test accuracies")
-
-plt.title("Training session's progress over iterations")
-plt.legend(loc='upper right', shadow=True)
-plt.ylabel('Training Progress (Loss or Accuracy values)')
-plt.xlabel('Training iteration')
-
-plt.show()
-
-# %% [markdown]
-# ## And finally, the multi-class confusion matrix and metrics!
-
-# %%
-# Results
-
-predictions = one_hot_predictions.argmax(1)
-
-print("Testing Accuracy: {}%".format(100*final_accuracy))
-
-print("")
-print("Precision: {}%".format(100*metrics.precision_score(y_test, predictions, average="weighted")))
-print("Recall: {}%".format(100*metrics.recall_score(y_test, predictions, average="weighted")))
-print("f1_score: {}%".format(100*metrics.f1_score(y_test, predictions, average="weighted")))
-
-print("")
-print("Confusion Matrix:")
-confusion_matrix = metrics.confusion_matrix(y_test, predictions)
-print(confusion_matrix)
-normalised_confusion_matrix = np.array(confusion_matrix, dtype=np.float32)/np.sum(confusion_matrix)*100
-
-print("")
-print("Confusion matrix (normalised to {} of total test data):".format(len(X_test)))
-print(normalised_confusion_matrix)
-print("Note: training and testing data is not equally distributed amongst classes, ")
-print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
-
-# the matrix used in other app (which is better than below one)
-from sklearn.metrics import classification_report, confusion_matrix
-label = predictions
-labels = LABELS
-ry_test = y_test
-
-print(classification_report(label, ry_test, target_names=[lb for lb in labels]))
-conf_mat = confusion_matrix(label, ry_test)
-
-plt.style.use('bmh')
-fig = plt.figure(figsize=(6,6))
-width = np.shape(conf_mat)[1]
-height = np.shape(conf_mat)[0]
-
-res = plt.imshow(np.array(conf_mat), cmap=plt.cm.summer, interpolation='nearest')
-for i, row in enumerate(conf_mat):
-    for j, c in enumerate(row):
-        if c > 0:
-            plt.text(j-.2, i+.1, c, fontsize=16)
-
-cb = fig.colorbar(res)
-plt.title('Confusion Matrix')
-_ = plt.xticks(range(6), [lb for lb in labels], rotation=90)
-_ = plt.yticks(range(6), [lb for lb in labels])
-plt.show()
-
-
-# Plot Results: 
-# width = 9
-# height = 6
-# plt.figure(figsize=(width, height))
-# plt.imshow(
-#     normalised_confusion_matrix, 
-#     interpolation='nearest', 
-#     cmap=plt.cm.rainbow
-# )
-# plt.title("Confusion matrix \n(normalised to % of total test data)")
-# plt.colorbar()
-# tick_marks = np.arange(n_classes)
-# plt.xticks(tick_marks, LABELS, rotation=90)
-# plt.yticks(tick_marks, LABELS)
-# plt.tight_layout()
-# plt.ylabel('True label')
-# plt.xlabel('Predicted label')
-# plt.show()
+plot_confusion(pred_test, y_test, LABELS)
