@@ -1,2 +1,8 @@
+save model in pb 
+https://stackoverflow.com/questions/55974076/how-to-correctly-create-saved-model-pb
+
+Recommended model:
+https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_saved_model.py
+
 https://www.tensorflow.org/lite/guide
 

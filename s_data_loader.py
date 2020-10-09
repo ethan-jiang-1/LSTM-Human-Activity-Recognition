@@ -24,6 +24,8 @@ LABELS = [
     "LAYING"
 ] 
 
+loaded = False
+
 # %% [markdown]
 # ## Let's start by downloading the data: 
 
@@ -127,18 +129,22 @@ class DataHolder(object):
 
 
 def load_all():
-    print("### Prepare loading all data...")
-    for path in X_train_signals_paths:
-        print("X_train_signals_path: {}".format(path))
-    X_train = load_X(X_train_signals_paths)
-    for path in X_test_signals_paths:
-        print("X_test_signals_path: {}".format(path))
-    X_test = load_X(X_test_signals_paths)
+    global loaded
+    if not loaded:
+        print("### Prepare loading all data...")
+        for path in X_train_signals_paths:
+            print("X_train_signals_path: {}".format(path))
+        X_train = load_X(X_train_signals_paths)
+        for path in X_test_signals_paths:
+            print("X_test_signals_path: {}".format(path))
+        X_test = load_X(X_test_signals_paths)
 
-    y_train = load_y(y_train_path)
-    print("y_train_path: {}".format(y_train_path))
-    y_test = load_y(y_test_path)
-    print("y_test_path: {}".format(y_test_path))
+        y_train = load_y(y_train_path)
+        print("y_train_path: {}".format(y_train_path))
+        y_test = load_y(y_test_path)
+        print("y_test_path: {}".format(y_test_path))
 
-    print("### All data has been loaded.")
+        print("### All data has been loaded.")
+        loaded = True
+
     return DataHolder(X_train, X_test, y_train, y_test)
