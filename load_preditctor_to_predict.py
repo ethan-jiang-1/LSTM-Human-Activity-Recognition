@@ -79,8 +79,8 @@ def do_predict_test_set(smp):
 
     # Accuracy for test data
     y_test_oh = one_hot(y_test)
-    x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
+    x = sess.graph.get_tensor_by_name('my_x_input:0')
+    y = sess.graph.get_tensor_by_name('my_y_output:0')
     pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
     print(x, y, pred, accuracy)
@@ -118,8 +118,8 @@ def do_predict_test_set_skip_A(smp):
 
     # Accuracy for test data
     y_test_oh = one_hot(y_test[::skip_ratio])
-    x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
+    x = sess.graph.get_tensor_by_name('my_x_input:0')
+    y = sess.graph.get_tensor_by_name('my_y_output:0')
     pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
     print(x, y, pred, accuracy)
@@ -156,8 +156,8 @@ def do_predict_test_set_skip_B(smp):
 
     # Accuracy for test data
     y_test_oh = one_hot(y_test[::skip_ratio])
-    x = sess.graph.get_tensor_by_name('Input/my_x_input:0')
-    y = sess.graph.get_tensor_by_name('Output/my_y_output:0')
+    x = sess.graph.get_tensor_by_name('my_x_input:0')
+    y = sess.graph.get_tensor_by_name('my_y_output:0')
     pred = sess.graph.get_tensor_by_name('Model/my_pred:0')
     accuracy = sess.graph.get_tensor_by_name('Accuray/my_accuracy:0')
     print(x, y, pred, accuracy)
