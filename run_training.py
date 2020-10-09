@@ -2,6 +2,12 @@
 # encoding:utf8
 
 import os
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
+
 import shutil
 import traceback
 
@@ -24,6 +30,7 @@ X_test = dh.X_test
 y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
+
 
 list_gpu = tf.config.experimental.list_physical_devices('GPU')
 prompt_yellow("Num GPUs Available: ", list_gpu, len(list_gpu))
@@ -283,7 +290,7 @@ while step * batch_size <= training_iters:
         )
         test_losses.append(loss)
         test_accuracies.append(acc)
-        print("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
+        prompt_blue("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
 
     step += 1
 
@@ -305,6 +312,8 @@ one_hot_predictions, final_accuracy, final_loss = sess.run(
 test_losses.append(final_loss)
 test_accuracies.append(final_accuracy)
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(final_accuracy))
+
+sess.close()
 
 
 # %% [markdown]
@@ -372,6 +381,33 @@ print(normalised_confusion_matrix)
 print("Note: training and testing data is not equally distributed amongst classes, ")
 print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
 
+#from sklearn.metrics import classification_report, confusion_matrix
+# the matrix used in other app (which is better than below one)
+# label = predictions
+# labels = LABELS
+# ry_test = y_test
+
+# print(classification_report(label, ry_test, target_names=[lb for lb in labels]))
+# conf_mat = confusion_matrix(label, ry_test)
+
+# plt.style.use('bmh')
+# fig = plt.figure(figsize=(6,6))
+# width = np.shape(conf_mat)[1]
+# height = np.shape(conf_mat)[0]
+
+# res = plt.imshow(np.array(conf_mat), cmap=plt.cm.summer, interpolation='nearest')
+# for i, row in enumerate(conf_mat):
+#     for j, c in enumerate(row):
+#         if c > 0:
+#             plt.text(j-.2, i+.1, c, fontsize=16)
+
+# cb = fig.colorbar(res)
+# plt.title('Confusion Matrix')
+# _ = plt.xticks(range(6), [lb for lb in labels], rotation=90)
+# _ = plt.yticks(range(6), [lb for lb in labels])
+# plt.show()
+
+
 # Plot Results: 
 width = 9
 height = 6
@@ -390,6 +426,3 @@ plt.tight_layout()
 plt.ylabel('True label')
 plt.xlabel('Predicted label')
 plt.show()
-
-
-sess.close()
