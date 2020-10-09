@@ -381,48 +381,48 @@ print(normalised_confusion_matrix)
 print("Note: training and testing data is not equally distributed amongst classes, ")
 print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
 
-#from sklearn.metrics import classification_report, confusion_matrix
 # the matrix used in other app (which is better than below one)
-# label = predictions
-# labels = LABELS
-# ry_test = y_test
+from sklearn.metrics import classification_report, confusion_matrix
+label = predictions
+labels = LABELS
+ry_test = y_test
 
-# print(classification_report(label, ry_test, target_names=[lb for lb in labels]))
-# conf_mat = confusion_matrix(label, ry_test)
+print(classification_report(label, ry_test, target_names=[lb for lb in labels]))
+conf_mat = confusion_matrix(label, ry_test)
 
-# plt.style.use('bmh')
-# fig = plt.figure(figsize=(6,6))
-# width = np.shape(conf_mat)[1]
-# height = np.shape(conf_mat)[0]
+plt.style.use('bmh')
+fig = plt.figure(figsize=(6,6))
+width = np.shape(conf_mat)[1]
+height = np.shape(conf_mat)[0]
 
-# res = plt.imshow(np.array(conf_mat), cmap=plt.cm.summer, interpolation='nearest')
-# for i, row in enumerate(conf_mat):
-#     for j, c in enumerate(row):
-#         if c > 0:
-#             plt.text(j-.2, i+.1, c, fontsize=16)
+res = plt.imshow(np.array(conf_mat), cmap=plt.cm.summer, interpolation='nearest')
+for i, row in enumerate(conf_mat):
+    for j, c in enumerate(row):
+        if c > 0:
+            plt.text(j-.2, i+.1, c, fontsize=16)
 
-# cb = fig.colorbar(res)
-# plt.title('Confusion Matrix')
-# _ = plt.xticks(range(6), [lb for lb in labels], rotation=90)
-# _ = plt.yticks(range(6), [lb for lb in labels])
-# plt.show()
+cb = fig.colorbar(res)
+plt.title('Confusion Matrix')
+_ = plt.xticks(range(6), [lb for lb in labels], rotation=90)
+_ = plt.yticks(range(6), [lb for lb in labels])
+plt.show()
 
 
 # Plot Results: 
-width = 9
-height = 6
-plt.figure(figsize=(width, height))
-plt.imshow(
-    normalised_confusion_matrix, 
-    interpolation='nearest', 
-    cmap=plt.cm.rainbow
-)
-plt.title("Confusion matrix \n(normalised to % of total test data)")
-plt.colorbar()
-tick_marks = np.arange(n_classes)
-plt.xticks(tick_marks, LABELS, rotation=90)
-plt.yticks(tick_marks, LABELS)
-plt.tight_layout()
-plt.ylabel('True label')
-plt.xlabel('Predicted label')
-plt.show()
+# width = 9
+# height = 6
+# plt.figure(figsize=(width, height))
+# plt.imshow(
+#     normalised_confusion_matrix, 
+#     interpolation='nearest', 
+#     cmap=plt.cm.rainbow
+# )
+# plt.title("Confusion matrix \n(normalised to % of total test data)")
+# plt.colorbar()
+# tick_marks = np.arange(n_classes)
+# plt.xticks(tick_marks, LABELS, rotation=90)
+# plt.yticks(tick_marks, LABELS)
+# plt.tight_layout()
+# plt.ylabel('True label')
+# plt.xlabel('Predicted label')
+# plt.show()
