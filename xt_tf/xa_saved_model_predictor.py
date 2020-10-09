@@ -21,7 +21,8 @@ from __future__ import print_function
 
 import logging
 
-from tensorflow.contrib.predictor import predictor
+#from tensorflow.contrib.predictor import predictor
+from xt_tf.xa_predictor import Predictor
 from tensorflow.contrib.saved_model.python.saved_model import reader
 from tensorflow.python.client import session
 from tensorflow.python.framework import ops
@@ -106,7 +107,8 @@ def _check_signature_arguments(signature_def_key,
     )
 
 
-class SavedModelPredictor(predictor.Predictor):
+#class SavedModelPredictor(predictor.Predictor):
+class SavedModelPredictor(Predictor):
   """A `Predictor` constructed from a `SavedModel`."""
 
   def __init__(self,
