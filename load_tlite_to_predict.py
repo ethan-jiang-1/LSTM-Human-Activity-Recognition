@@ -14,8 +14,12 @@ y_test = dh.y_test
 LABELS = dh.LABELS
 
 
-def do_load_lite_predictor(name):
-    model_path = "model_tflite/model_save_{}.tflite".format(name)
+def get_model_path(inputs, step):
+    return "model_tflite/model_save_{}_{}.tflite".format(inputs, step)
+
+
+def do_load_lite_predictor(model_path):
+    print("using tlite model from {} to predict".format(model_path))
 
     # Load TFLite model and allocate tensors.
     interpreter = Interpreter(model_path=model_path)
@@ -38,10 +42,10 @@ def do_load_lite_predictor(name):
 
         interpreter.invoke()
         output_data = interpreter.get_tensor(output_details[0]['index'])
-        print(output_data)
+        # print(output_data)
         pred_v = output_data.argmax(1)
         real_v = y_test[cn:cn + 1]
-        print(pred_v, real_v)
+        # print(pred_v, real_v)
         if pred_v[0] == real_v[0][0]:
             matched += 1
         else:
@@ -52,9 +56,11 @@ def do_load_lite_predictor(name):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    name = "100"
-
     if len(sys.argv) >= 2:
-        name = sys.argv[1]
+        model_path = sys.argv[1]
+    else:
+        inputs = 9
+        step = 100
+        model_path = get_model_path(inputs, step)
 
-    do_load_lite_predictor(name)
+    do_load_lite_predictor(model_path)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
 
+from operator import mod
 import tensorflow as tf
 import os
 import traceback 
@@ -22,15 +23,17 @@ y_test = dh.y_test
 LABELS = dh.LABELS
 
 
-def do_load_predictor(name):
-    print("received model need to be converted {}".format(name))
-    try:
-        model_name = "model_save_" + name
-        if not os.path.isdir(model_name):
-            print("\n** Error, no model folder found {}".format(model_name))
+def get_model_dir(inputs, step):
+    return "model_save_{}_{}".format(inputs, step)
+
+def do_load_predictor(model_dir):
+    print("received model need to be converted {}".format(model_dir))
+    try:        
+        if not os.path.isdir(model_dir):
+            print("\n** Error, no model folder found {}".format(model_dir))
             return False
 
-        dir_name = "./" + model_name
+        dir_name = "./" + model_dir
         smp = SavedModelPredictor(dir_name)
         return smp
     except Exception as ex:
@@ -217,12 +220,14 @@ def do_predict_test_one_X(smp):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    name = "500"
-
     if len(sys.argv) >= 2:
-        name = sys.argv[1]
+        model_dir = sys.argv[1]
+    else:
+        inputs = n_input
+        step = 100
+        model_dir = get_model_dir(inputs, step)
 
-    smp = do_load_predictor(name)
+    smp = do_load_predictor(model_dir)
     if smp is not None:
         do_predict_test_set_all(smp)
         do_predict_test_set_skip_A(smp)

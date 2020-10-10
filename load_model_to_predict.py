@@ -26,16 +26,19 @@ y_train = dh.y_train
 y_test = dh.y_test
 LABELS = dh.LABELS
 
-def do_load_model(name):
-    print("received model need to be converted {}".format(name))
+
+def get_model_dir(inputs, step):
+    return "model_save_{}_{}".format(inputs, step)
+
+
+def do_load_model(model_dir):
+    print("received model need to be converted {}".format(model_dir))
     try:
-        model_name = "model_save_" + name
-        if not os.path.isdir(model_name):
-            print("\n** Error, no model folder found {}".format(model_name))
+        if not os.path.isdir(model_dir):
+            print("\n** Error, no model folder found {}".format(model_dir))
             return False
 
-        dir_name = "./" + model_name
-        # import pdb; pdb.set_trace()
+        dir_name = "./" + model_dir
         
         sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True, device_count={'GPU': 0}))
         init = tf.global_variables_initializer()
@@ -166,12 +169,14 @@ def check_signature_def(sess, meta_graph_def):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    name = "100"
-
     if len(sys.argv) >= 2:
-        name = sys.argv[1]
+        model_dir = sys.argv[1]
+    else:
+        inputs = 9
+        step = 100
+        model_dir = get_model_dir(inputs, step)
 
-    sess, meta_info_def = do_load_model(name)
+    sess, meta_info_def = do_load_model(model_dir)
     if check_graph(sess, meta_info_def):
         check_signature_def(sess, meta_info_def)
         if sess is not None:

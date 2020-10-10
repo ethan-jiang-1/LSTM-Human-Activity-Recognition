@@ -20,7 +20,7 @@ from sklearn import metrics
 print("import tf")
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 
-from s_save_model import save_model_ses
+from s_save_model import SessModelSaver
 from s_save_pred import PredModelSaver
 from s_graph import inspect_graph, get_summary_writer, add_summary
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red, prompt_progress
@@ -234,10 +234,13 @@ writer = get_summary_writer(sess)
 
 def save_model_pred(sess, step):
     prompt_yellow("save_model_pred {}".format(step))
-    one_xs = extract_batch_size(X_test, step, 1)
-    one_ys_oh = one_hot(extract_batch_size(y_test, step, 1))
-    pms = PredModelSaver(sess, step, pred, one_xs, one_ys_oh, x, y, ctx, cty)
+    pms = PredModelSaver(sess, step, pred, x, inputs=n_input)
     return pms.save()
+
+
+def save_model_ses(sess, step):
+    sms = SessModelSaver(sess, step, inputs=n_input)
+    return sms.save()
 
 
 # Perform Training steps with "batch_size" amount of example data at each loop
