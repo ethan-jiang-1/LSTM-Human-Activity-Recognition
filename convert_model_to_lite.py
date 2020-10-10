@@ -53,7 +53,7 @@ def find_converter(model_dir):
 # http://primo.ai/index.php?title=Converting_to_TensorFlow_Lite
 # Converting a SavedModel.
 def convert_and_save(model_dir, saved_model_path):
-    print("try to convert {}".format(model_dir))
+    print("try to convert {} to {} ".format(model_dir, saved_model_path))
 
     converter = find_converter(model_dir)
     tflite_model = converter.convert()
