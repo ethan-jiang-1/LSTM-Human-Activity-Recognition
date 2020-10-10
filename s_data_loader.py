@@ -117,10 +117,10 @@ def load_all(inputs=9):
    
         if inputs == 6:
             X_train_signals_paths_6 = [
-                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_9
+                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_6
             ]
             X_test_signals_paths_6 = [
-                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_9
+                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_6
             ]
             X_train_signals_paths_6 = X_train_signals_paths_6
             X_test_signals_paths_6 = X_test_signals_paths_6            
