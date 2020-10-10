@@ -63,8 +63,7 @@ n_input = len(X_train[0][0])  # 9 input parameters per timestep
 
 
 # LSTM Neural Network's internal structure
-# n_hidden = 32 # Hidden layer num of features
-n_hidden = 642 # Hidden layer num of features
+n_hidden = 32 # Hidden layer num of features
 n_classes = 6 # Total classes (should go up, or should go down)
 
 
