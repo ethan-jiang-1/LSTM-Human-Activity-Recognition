@@ -21,8 +21,8 @@ def find_converter(model_name):
 
     if not using_v2:
         print("Using V1 Converter")
-        # from tensorflow.lite.python.lite import TFLiteConverter as tfc
-        from xt_tf.xa_lite import TFLiteConverter as tfc
+        from tensorflow.lite.python.lite import TFLiteConverter as tfc
+        # from xt_tf.xa_lite import TFLiteConverter as tfc
         converter = tfc.from_saved_model("./" + model_name)
         # converter.allow_custom_ops = True
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
@@ -31,8 +31,8 @@ def find_converter(model_name):
     else:
         print("Using V2 Converter")
         tf.enable_eager_execution()
-        #from tensorflow.lite.python.lite import TFLiteConverterV2 as tfc
-        from xt_tf.xa_lite import TFLiteConverterV2 as tfc
+        from tensorflow.lite.python.lite import TFLiteConverterV2 as tfc
+        # from xt_tf.xa_lite import TFLiteConverterV2 as tfc
         tags = [tag_constants.SERVING]
         signature_keys = [
             signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
