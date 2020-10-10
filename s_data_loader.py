@@ -2,13 +2,22 @@
 import numpy as np
 import os
 
-INPUT_SIGNAL_TYPES = [
+INPUT_SIGNAL_TYPES_9 = [
     "body_acc_x_",
     "body_acc_y_",
     "body_acc_z_",
     "body_gyro_x_",
     "body_gyro_y_",
     "body_gyro_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_"
+]
+
+INPUT_SIGNAL_TYPES_6 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
     "total_acc_x_",
     "total_acc_y_",
     "total_acc_z_"
@@ -48,18 +57,10 @@ def data_root():
 
 # DATA_PATH = "data/"
 DATA_PATH = data_root()
-
-
 DATASET_PATH = DATA_PATH + "UCI HAR Dataset/"
-print("\n" + "Dataset is now located at: " + DATASET_PATH)
-
-# %% [markdown]
-# ## Preparing dataset:
-
-# %%
 TRAIN = "train/"
 TEST = "test/"
-
+print("\n" + "Dataset is now located at: " + DATASET_PATH)
 
 # Load "X" (the neural network's training and testing inputs)
 
@@ -78,13 +79,6 @@ def load_X(X_signals_paths):
     
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
-
-X_train_signals_paths = [
-    DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES
-]
-X_test_signals_paths = [
-    DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES
-]
 
 # print("x_train: {}".format(X_train))
 # print("x_test: {}".format(X_test))
@@ -106,10 +100,6 @@ def load_y(y_path):
     return y_ - 1
 
 
-y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
-y_test_path = DATASET_PATH + TEST + "y_test.txt"
-
-
 class DataHolder(object):
     def __init__(self, X_train, X_test, y_train, y_test):
         self.X_train = X_train
@@ -117,27 +107,51 @@ class DataHolder(object):
     
         self.y_train = y_train
         self.y_test = y_test
-        
-        self.X_train_signals_paths = X_train_signals_paths
-        self.X_test_signals_paths = X_test_signals_paths
-    
-        self.y_train_path = y_train_path
-        self.y_test_path = y_test_path
-
-        self.INPUT_SIGNAL_TYPES = INPUT_SIGNAL_TYPES
         self.LABELS = LABELS
 
 
-def load_all():
+def load_all(inputs=9):
     global loaded
     if not loaded:
-        print("### Prepare loading all data...")
-        for path in X_train_signals_paths:
-            print("X_train_signals_path: {}".format(path))
-        X_train = load_X(X_train_signals_paths)
-        for path in X_test_signals_paths:
-            print("X_test_signals_path: {}".format(path))
-        X_test = load_X(X_test_signals_paths)
+        print("### Prepare loading all data {} inputs...".format(inputs))
+   
+        if inputs == 6:
+            X_train_signals_paths_6 = [
+                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_9
+            ]
+            X_test_signals_paths_6 = [
+                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_9
+            ]
+            X_train_signals_paths_6 = X_train_signals_paths_6
+            X_test_signals_paths_6 = X_test_signals_paths_6            
+
+            for path in X_train_signals_paths_6:
+                print("X_train_signals_path: {}".format(path))
+            X_train = load_X(X_train_signals_paths_6)
+            for path in X_test_signals_paths_6:
+                print("X_test_signals_path: {}".format(path))
+            X_test = load_X(X_test_signals_paths_6)
+        else:
+            X_train_signals_paths_9 = [
+                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_9
+            ]
+            X_test_signals_paths_9 = [
+                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_9
+            ]
+            X_train_signals_paths_9 = X_train_signals_paths_9
+            X_test_signals_paths_9 = X_test_signals_paths_9            
+
+            for path in X_train_signals_paths_9:
+                print("X_train_signals_path: {}".format(path))
+            X_train = load_X(X_train_signals_paths_9)
+            for path in X_test_signals_paths_9:
+                print("X_test_signals_path: {}".format(path))
+            X_test = load_X(X_test_signals_paths_9)
+
+        #load y info (label to which activities)
+
+        y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
+        y_test_path = DATASET_PATH + TEST + "y_test.txt"
 
         y_train = load_y(y_train_path)
         print("y_train_path: {}".format(y_train_path))
