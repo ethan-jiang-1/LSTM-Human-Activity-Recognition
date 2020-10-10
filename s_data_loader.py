@@ -62,8 +62,8 @@ TRAIN = "train/"
 TEST = "test/"
 print("\n" + "Dataset is now located at: " + DATASET_PATH)
 
-# Load "X" (the neural network's training and testing inputs)
 
+# Load "X" (the neural network's training and testing inputs)
 def load_X(X_signals_paths):
     X_signals = []
     
@@ -80,11 +80,7 @@ def load_X(X_signals_paths):
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
 
-# print("x_train: {}".format(X_train))
-# print("x_test: {}".format(X_test))
-
 # Load "y" (the neural network's training and testing outputs)
-
 def load_y(y_path):
     file = open(y_path, 'r')
     # Read dataset from disk, dealing with text file's syntax
@@ -100,63 +96,84 @@ def load_y(y_path):
     return y_ - 1
 
 
+def find_inputs_num():
+    di = os.environ['DATA_INPUTS_NUM']
+    if di is not None:
+        return int(di)
+    return 9
+
+
+def _load_inputs_9():
+    print("load raw data or feature data for 9 inputs")
+    X_train_signals_paths_9 = [
+        DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_9]
+    X_test_signals_paths_9 = [
+            DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_9]
+    X_train_signals_paths_9 = X_train_signals_paths_9
+    X_test_signals_paths_9 = X_test_signals_paths_9
+
+    for path in X_train_signals_paths_9:
+        print("X_train_signals_path: {}".format(path))
+    X_train = load_X(X_train_signals_paths_9)
+    for path in X_test_signals_paths_9:
+        print("X_test_signals_path: {}".format(path))
+    X_test = load_X(X_test_signals_paths_9)
+    return X_train, X_test
+
+
+def _load_inputs_6():
+    print("load raw data or feature data for 6 inputs")
+    X_train_signals_paths_6 = [
+        DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_6]
+    X_test_signals_paths_6 = [
+            DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_6]
+    X_train_signals_paths_6 = X_train_signals_paths_6
+    X_test_signals_paths_6 = X_test_signals_paths_6
+
+    for path in X_train_signals_paths_6:
+        print("X_train_signals_path: {}".format(path))
+    X_train = load_X(X_train_signals_paths_6)
+    for path in X_test_signals_paths_6:
+        print("X_test_signals_path: {}".format(path))
+    X_test = load_X(X_test_signals_paths_6)
+    return X_train, X_test
+
+
+def _load_lables_all():
+    print("load label data...")
+    y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
+    y_test_path = DATASET_PATH + TEST + "y_test.txt"
+
+    y_train = load_y(y_train_path)
+    print("y_train_path: {}".format(y_train_path))
+    y_test = load_y(y_test_path)
+    print("y_test_path: {}".format(y_test_path))
+    return y_train, y_test
+
+
 class DataHolder(object):
     def __init__(self, X_train, X_test, y_train, y_test):
         self.X_train = X_train
         self.X_test = X_test
-    
+
         self.y_train = y_train
         self.y_test = y_test
         self.LABELS = LABELS
 
 
-def load_all(inputs=9):
+def load_all():
     global loaded
     if not loaded:
+        #load x info (raw sample data or feature data)
+        inputs = find_inputs_num()
         print("### Prepare loading all data {} inputs...".format(inputs))
-   
         if inputs == 6:
-            X_train_signals_paths_6 = [
-                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_6
-            ]
-            X_test_signals_paths_6 = [
-                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_6
-            ]
-            X_train_signals_paths_6 = X_train_signals_paths_6
-            X_test_signals_paths_6 = X_test_signals_paths_6            
-
-            for path in X_train_signals_paths_6:
-                print("X_train_signals_path: {}".format(path))
-            X_train = load_X(X_train_signals_paths_6)
-            for path in X_test_signals_paths_6:
-                print("X_test_signals_path: {}".format(path))
-            X_test = load_X(X_test_signals_paths_6)
+            X_train, X_test = _load_inputs_6()
         else:
-            X_train_signals_paths_9 = [
-                DATASET_PATH + TRAIN + "Inertial Signals/" + signal + "train.txt" for signal in INPUT_SIGNAL_TYPES_9
-            ]
-            X_test_signals_paths_9 = [
-                DATASET_PATH + TEST + "Inertial Signals/" + signal + "test.txt" for signal in INPUT_SIGNAL_TYPES_9
-            ]
-            X_train_signals_paths_9 = X_train_signals_paths_9
-            X_test_signals_paths_9 = X_test_signals_paths_9            
-
-            for path in X_train_signals_paths_9:
-                print("X_train_signals_path: {}".format(path))
-            X_train = load_X(X_train_signals_paths_9)
-            for path in X_test_signals_paths_9:
-                print("X_test_signals_path: {}".format(path))
-            X_test = load_X(X_test_signals_paths_9)
+            X_train, X_test = _load_inputs_9()
 
         #load y info (label to which activities)
-
-        y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
-        y_test_path = DATASET_PATH + TEST + "y_test.txt"
-
-        y_train = load_y(y_train_path)
-        print("y_train_path: {}".format(y_train_path))
-        y_test = load_y(y_test_path)
-        print("y_test_path: {}".format(y_test_path))
+        y_train, y_test = _load_lables_all()
 
         print("### All data has been loaded.")
         loaded = True

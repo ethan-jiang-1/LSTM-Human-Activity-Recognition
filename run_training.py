@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # encoding:utf8
 
+from s_data_loader import load_all, find_inputs_num
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+os.environ['DATA_INPUTS_NUM'] = '6' 
 
 import shutil
 import traceback
@@ -24,7 +26,6 @@ from s_save_model import SessModelSaver
 from s_save_pred import PredModelSaver
 from s_graph import inspect_graph, get_summary_writer, add_summary
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red, prompt_progress
-from s_data_loader import load_all
 
 # load dataset from data_loader
 prompt_progress("LoadDataset")

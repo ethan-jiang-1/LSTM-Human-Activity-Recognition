@@ -1,17 +1,17 @@
 import sys
+import os
 from tensorflow.lite.python.lite import Interpreter
 # import numpy as np
 # import tensorflow as tf
 
-from s_data_loader import load_all
+from s_data_loader import load_all, find_inputs_num
 
-# load dataset from data_loader
-dh = load_all()
-#X_train = dh.X_train
-#y_train = dh.y_train
-X_test = dh.X_test
-y_test = dh.y_test
-LABELS = dh.LABELS
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+os.environ['DATA_INPUTS_NUM'] = '9'
 
 
 def get_model_path(inputs, step):
@@ -20,6 +20,14 @@ def get_model_path(inputs, step):
 
 def do_load_lite_predictor(model_path):
     print("using tlite model from {} to predict".format(model_path))
+
+    # load dataset from data_loader
+    dh = load_all()
+    #X_train = dh.X_train
+    #y_train = dh.y_train
+    X_test = dh.X_test
+    y_test = dh.y_test
+    #LABELS = dh.LABELS
 
     # Load TFLite model and allocate tensors.
     interpreter = Interpreter(model_path=model_path)
@@ -59,7 +67,7 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
     if len(sys.argv) >= 2:
         model_path = sys.argv[1]
     else:
-        inputs = 9
+        inputs = find_inputs_num()
         step = 100
         model_path = get_model_path(inputs, step)
 

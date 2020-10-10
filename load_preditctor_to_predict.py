@@ -11,8 +11,15 @@ from xt_tf.xa_saved_model_predictor import SavedModelPredictor
 import numpy as np
 from sklearn import metrics
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
-from s_data_loader import load_all
+from s_data_loader import load_all, find_inputs_num
 from s_graph import inspect_graph
+
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+os.environ['DATA_INPUTS_NUM'] = '9'
 
 # load dataset from data_loader
 dh = load_all()
@@ -223,7 +230,7 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
     if len(sys.argv) >= 2:
         model_dir = sys.argv[1]
     else:
-        inputs = n_input
+        inputs = find_inputs_num()
         step = 100
         model_dir = get_model_dir(inputs, step)
 
