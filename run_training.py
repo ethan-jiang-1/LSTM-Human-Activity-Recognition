@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding:utf8
 
-from s_data_loader import load_all, find_inputs_num
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
@@ -9,6 +8,8 @@ import os
 # 3 = INFO, WARNING, and ERROR messages are not printed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 os.environ['DATA_INPUTS_NUM'] = '9' 
+
+from s_data_loader import load_all, find_inputs_num
 
 import shutil
 import traceback
@@ -62,7 +63,8 @@ n_input = len(X_train[0][0])  # 9 input parameters per timestep
 
 
 # LSTM Neural Network's internal structure
-n_hidden = 32 # Hidden layer num of features
+# n_hidden = 32 # Hidden layer num of features
+n_hidden = 642 # Hidden layer num of features
 n_classes = 6 # Total classes (should go up, or should go down)
 
 

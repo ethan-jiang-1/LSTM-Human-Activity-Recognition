@@ -1,17 +1,20 @@
-import sys
+#!/usr/bin/env python
+# encoding:utf8
+
 import os
-from tensorflow.lite.python.lite import Interpreter
-# import numpy as np
-# import tensorflow as tf
-
-from s_data_loader import load_all, find_inputs_num
-
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 os.environ['DATA_INPUTS_NUM'] = '9'
+
+import sys
+from tensorflow.lite.python.lite import Interpreter
+# import numpy as np
+# import tensorflow as tf
+
+from s_data_loader import load_all, find_inputs_num
 
 
 def get_model_path(inputs, step):

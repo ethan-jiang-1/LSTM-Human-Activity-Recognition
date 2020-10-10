@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 # encoding:utf8
 
-import tensorflow as tf
 import os
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
+os.environ['DATA_INPUTS_NUM'] = '9'
+
+import tensorflow as tf
+from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 import traceback 
 import sys
 import logging
-
 import numpy as np
 from sklearn import metrics
-from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
 from s_data_loader import load_all, find_inputs_num
 from s_graph import inspect_graph
 
@@ -18,12 +24,6 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 logging.getLogger('tensorflow').disabled = True
 logging.getLogger('tensorflow.core').disabled = True
 
-# 0 = all messages are logged (default behavior)
-# 1 = INFO messages are not printed
-# 2 = INFO and WARNING messages are not printed
-# 3 = INFO, WARNING, and ERROR messages are not printed
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-os.environ['DATA_INPUTS_NUM'] = '9'
 
 # load dataset from data_loader
 dh = load_all()
