@@ -8,7 +8,7 @@ import os
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-os.environ['DATA_INPUTS_NUM'] = '6' 
+os.environ['DATA_INPUTS_NUM'] = '9' 
 
 import shutil
 import traceback
