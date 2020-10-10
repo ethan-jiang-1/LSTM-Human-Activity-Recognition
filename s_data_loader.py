@@ -1,6 +1,7 @@
 
 import numpy as np
 import os
+import math
 
 INPUT_SIGNAL_TYPES_9 = [
     "body_acc_x_",
@@ -76,7 +77,8 @@ def load_X(X_signals_paths):
             ]]
         )
         file.close()
-    
+    # x_signals np array: shape(6, 7352, 128)
+    # transpose to np as shape(7352, 128, 6)
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
 
@@ -92,6 +94,8 @@ def load_y(y_path):
     )
     file.close()
     
+    # y_ np shape(7352, 1) , value is from 1 to 6
+    # y_ -1 will decrease all value with -1,  so the value will become 0 to 5 (0-based), keep shape untouched
     # Substract 1 to each output class for friendly 0-based indexing 
     return y_ - 1
 
@@ -139,6 +143,38 @@ def _load_inputs_6():
     return X_train, X_test
 
 
+def _load_inputs_7():
+    print("load raw data or feature data for 7 inputs")
+    X_train, X_test = _load_inputs_6()
+
+    print("prepare mag data on top of 3 existing data...")
+    nd3 = X_train
+    nc_len = len(nd3)
+    ns_len = len(nd3[0])
+    np_mag = np.zeros((nc_len, ns_len, 1))
+    for nc in range(0, nc_len):
+        for ns in range(0, ns_len):
+            nd3_cs = nd3[nc][ns]
+            np_mag[nc][ns][0] = math.sqrt(
+                nd3_cs[0] ** 2 + nd3_cs[1] ** 2 + nd3_cs[2] ** 2)
+
+    X_train = np.concatenate((X_train, np_mag), axis=2)
+
+    nd3 = X_test
+    nc_len = len(nd3)
+    ns_len = len(nd3[0])
+    np_mag = np.zeros((nc_len, ns_len, 1))
+    for nc in range(0, nc_len):
+        for ns in range(0, ns_len):
+            nd3_cs = nd3[nc][ns]
+            np_mag[nc][ns][0] = math.sqrt(
+                nd3_cs[0] ** 2 + nd3_cs[1] ** 2 + nd3_cs[2] ** 2)
+
+    X_test = np.concatenate((X_test, np_mag), axis=2)
+
+    return X_train, X_test
+
+
 def _load_lables_all():
     print("load label data...")
     y_train_path = DATASET_PATH + TRAIN + "y_train.txt"
@@ -169,6 +205,8 @@ def load_all():
         print("### Prepare loading all data {} inputs...".format(inputs))
         if inputs == 6:
             X_train, X_test = _load_inputs_6()
+        elif inputs == 7:
+            X_train, X_test = _load_inputs_7()
         else:
             X_train, X_test = _load_inputs_9()
 
