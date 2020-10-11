@@ -48,8 +48,8 @@ def print_accuracy(final_accuracy, pred_test, y_test, X_test):
     print("so it is normal that more than a 6th of the data is correctly classifier in the last category.")
 
 
-def plot_traning(batch_size, train_losses, train_accuracies, training_iters,
-                 test_losses, test_accuracies, display_iter):
+def plot_traning(batch_size, train_losses, train_accuracies, m_training_iters,
+                 test_losses, test_accuracies, m_display_iter):
     font = {
         'family' : 'Bitstream Vera Sans',
         'weight' : 'bold',
@@ -66,8 +66,8 @@ def plot_traning(batch_size, train_losses, train_accuracies, training_iters,
     plt.plot(indep_train_axis, np.array(train_accuracies), "g--", label="Train accuracies")
 
     indep_test_axis = np.append(
-        np.array(range(batch_size, len(test_losses)*display_iter, display_iter)[:-1]),
-        [training_iters]
+        np.array(range(batch_size, len(test_losses)*m_display_iter, m_display_iter)[:-1]),
+        [m_training_iters]
     )
     plt.plot(indep_test_axis, np.array(test_losses), "b-", label="Test losses")
     plt.plot(indep_test_axis, np.array(test_accuracies), "g-", label="Test accuracies")

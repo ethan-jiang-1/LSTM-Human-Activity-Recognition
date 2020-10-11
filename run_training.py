@@ -57,10 +57,11 @@ tf.get_logger().setLevel(logging.ERROR)
 # Input Data 
 
 
-training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
-test_data_count = len(X_test)  # 2947 testing series
+n_training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
+n_test_data_count = len(X_test)  # 2947 testing series
 n_steps = len(X_train[0])  # 128 timesteps per series
 n_input = len(X_train[0][0])  # 9 input parameters per timestep
+n_classes = 6 # Total classes (should go up, or should go down
 
 
 inspect_data(X_train, X_test, y_train, y_test)
@@ -68,14 +69,13 @@ inspect_data(X_train, X_test, y_train, y_test)
 
 # key data for model and training
 # LSTM Neural Network's internal structure
-n_hidden = 32 # Hidden layer num of features
-n_classes = 6 # Total classes (should go up, or should go down
+m_hidden = 32 # Hidden layer num of features
 
-learning_rate = 0.0025
-lambda_loss_amount = 0.0015
-training_iters = training_data_count * 300  # Loop 300 times on the dataset
-batch_size = 1500
-display_iter = 30000  # To show test set accuracy during training
+m_learning_rate = 0.0025
+m_lambda_loss_amount = 0.0015
+m_training_iters = n_training_data_count * 300  # Loop 300 times on the dataset
+m_batch_size = 1500
+m_display_iter = 30000  # To show test set accuracy during training
 
 
 def extract_batch_size(_train, step, batch_size):
@@ -106,13 +106,7 @@ def one_hot(y_, n_classes=n_classes):
 # %% [markdown]
 cnc = tf.constant(n_classes, name="my_cn_classes")
 cns = tf.constant(n_steps, name="my_cn_steps")
-cni = tf.constant(n_input, name="my_cn_input")
-# cnh = tf.constant(n_hidden, name="my_n_hidden")
 
-cbatch_xs = extract_batch_size(X_test, 1, 1)
-cbatch_ys_oh = one_hot(extract_batch_size(y_test, 1, 1))
-ctx = tf.constant(cbatch_xs, name="my_ca1_input")
-cty = tf.constant(cbatch_ys_oh, name="my_ca1_output")
 
 # ## Utility functions for training:    
 # %%
@@ -127,7 +121,6 @@ def LSTM_RNN(_X, _weights, _biases):
     # input shape: (batch_size, n_steps, n_input)
     _X = tf.transpose(_X, [1, 0, 2])  # permute n_steps and batch_size
     # Reshape to prepare input to hidden activation
-    #_X = tf.reshape(_X, [-1, n_input]) 
     _X = tf.reshape(_X, [-1, n_input]) 
     # new shape: (n_steps*batch_size, n_input)
     
@@ -135,11 +128,11 @@ def LSTM_RNN(_X, _weights, _biases):
     _X = tf.nn.relu(tf.matmul(_X, _weights['hidden']) + _biases['hidden'])
     # Split data because rnn cell needs a list of inputs for the RNN inner loop
     _X = tf.split(_X, n_steps, 0) 
-    # new shape: n_steps * (batch_size, n_hidden)
+    # new shape: n_steps * (batch_size, m_hidden)
 
     # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-    lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
-    lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(n_hidden, forget_bias=1.0, state_is_tuple=True)
+    lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
+    lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
     lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
     # Get LSTM cell output
     outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)
@@ -168,11 +161,11 @@ with tf.name_scope("Model"):
     # Graph weights
     weights = {
         # Hidden layer weights
-        'hidden': tf.Variable(tf.random_normal([n_input, n_hidden], name="weights_hidden")),
-        'out': tf.Variable(tf.random_normal([n_hidden, n_classes], mean=1.0), name="weights_out")
+        'hidden': tf.Variable(tf.random_normal([n_input, m_hidden], name="weights_hidden")),
+        'out': tf.Variable(tf.random_normal([m_hidden, n_classes], mean=1.0), name="weights_out")
     }
     biases = {
-        'hidden': tf.Variable(tf.random_normal([n_hidden]), name="biases_hidden"),
+        'hidden': tf.Variable(tf.random_normal([m_hidden]), name="biases_hidden"),
         'out': tf.Variable(tf.random_normal([n_classes]), name="biases_out")
     }    
     pred = LSTM_RNN(x, weights, biases)
@@ -183,13 +176,13 @@ with tf.name_scope("Output"):
 prompt_progress("Loss")
 with tf.name_scope("Loss"):
     # Loss, optimizer and evaluation
-    _l2 = lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
+    _l2 = m_lambda_loss_amount * sum(tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()) # L2 loss prevents this overkill neural network to overfit the data
 
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + _l2 # Softmax loss
 
 prompt_progress("Optimizer")
 with tf.name_scope("Optimizer"):
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost) # Adam Optimizer
+    optimizer = tf.train.AdamOptimizer(learning_rate=m_learning_rate).minimize(cost) # Adam Optimizer
     # optimizer = tf.identity(optimizer, name="my_optimizer")
 
 prompt_progress("Accuray")
@@ -240,9 +233,9 @@ def save_model_ses(sess, step):
 # Perform Training steps with "batch_size" amount of example data at each loop
 prompt_progress("SessionLoopStart")
 step = 1
-while step * batch_size <= training_iters:
-    batch_xs = extract_batch_size(X_train, step, batch_size)
-    batch_ys = extract_batch_size(y_train, step, batch_size)
+while step * m_batch_size <= m_training_iters:
+    batch_xs = extract_batch_size(X_train, step, m_batch_size)
+    batch_ys = extract_batch_size(y_train, step, m_batch_size)
     batch_ys_oh = one_hot(batch_ys)
 
     # Fit training using batch data
@@ -257,10 +250,10 @@ while step * batch_size <= training_iters:
     train_accuracies.append(acc)
     
     # Evaluate network only at some steps for faster training: 
-    if (step*batch_size % display_iter == 0) or (step == 1) or (step * batch_size > training_iters):
+    if (step*m_batch_size % m_display_iter == 0) or (step == 1) or (step * m_batch_size > m_training_iters):
         
         # To not spam console, show training accuracy/loss in this "if"
-        print("Training iter #" + str(step*batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
+        print("Training iter #" + str(step*m_batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))
         if step % 400 == 100:
             save_model_pred(sess, step)
         if step % 100 == 0:
@@ -317,8 +310,8 @@ sess.close()
 pred_test = one_hot_predictions.argmax(1)
 
 from s_plot import plot_traning, print_accuracy, plot_confusion
-plot_traning(batch_size, train_losses, train_accuracies, training_iters,
-                 test_losses, test_accuracies, display_iter)
+plot_traning(m_batch_size, train_losses, train_accuracies, m_training_iters,
+                 test_losses, test_accuracies, m_display_iter)
 
 print_accuracy(final_accuracy, pred_test, y_test, X_test)
 

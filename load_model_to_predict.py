@@ -129,12 +129,6 @@ def check_graph(sess, meta_graph_def):
         op_accuracy = sess.graph.get_operation_by_name('Accuray/my_accuracy')
         print(op_x, op_y, op_pred, op_accuracy)
 
-        ctx = sess.graph.get_tensor_by_name("my_ca1_input:0")
-        cty = sess.graph.get_tensor_by_name("my_ca1_output:0")
-        op_ctx = sess.graph.get_operation_by_name("my_ca1_input")
-        op_cty = sess.graph.get_operation_by_name("my_ca1_output")
-        print(ctx, cty, op_ctx, op_cty)
-
         nc = sess.graph.get_operation_by_name("my_cn_classes")
         print(nc)
 

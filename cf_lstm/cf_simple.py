@@ -16,13 +16,13 @@ y_train = dt.y_train
 y_test = dt.y_test
 
 
-training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
-test_data_count = len(X_test)  # 2947 testing series
+n_training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
+n_test_data_count = len(X_test)  # 2947 testing series
 n_steps = len(X_train[0])  # 128 timesteps per series
 n_input = len(X_train[0][0])  # 9 input parameters per timestep
 n_classes = 6
 
-print(training_data_count, test_data_count, n_steps, n_input)
+print(n_training_data_count, n_test_data_count, n_steps, n_input)
 
 
 print("Some useful info to get an insight on dataset's shape and normalisation:")
@@ -61,9 +61,9 @@ def one_hot(y_, n_classes=n_classes):
 
 
 step = 1
-batch_size = 1500
-batch_xs = extract_batch_size(X_train, step, batch_size)
-batch_ys = extract_batch_size(y_train, step, batch_size)
+m_batch_size = 1500
+batch_xs = extract_batch_size(X_train, step, m_batch_size)
+batch_ys = extract_batch_size(y_train, step, m_batch_size)
 batch_ys_oh = one_hot(batch_ys)
 print(batch_xs.shape)
 print(batch_ys.shape)
