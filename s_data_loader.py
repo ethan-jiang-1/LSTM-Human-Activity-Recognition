@@ -143,33 +143,63 @@ def _load_inputs_6():
     return X_train, X_test
 
 
+def _get_new_mag_body_feature(X_):
+    # print("shape of _X", X_.shape)
+    #shape of X_ (nc(1000+), ns(128), val(6 or 9))
+    nd3 = X_
+    nc_len = len(nd3)
+    ns_len = len(nd3[0])
+    np_mag = np.zeros((nc_len, ns_len, 1))
+    for nc in range(0, nc_len):
+        for ns in range(0, ns_len):
+            nd3_cs = nd3[nc][ns]
+            np_mag[nc][ns][0] = math.sqrt(
+                nd3_cs[0] ** 2 + nd3_cs[1] ** 2 + nd3_cs[2] ** 2)
+    return np_mag
+
+
+def _get_new_mag_total_feature(X_):
+    # print("shape of _X", X_.shape)
+    #shape of X_ (nc(1000+), ns(128), val(6 or 9))
+    nd3 = X_
+    nc_len = len(nd3)
+    ns_len = len(nd3[0])
+    np_mag = np.zeros((nc_len, ns_len, 1))
+    for nc in range(0, nc_len):
+        for ns in range(0, ns_len):
+            nd3_cs = nd3[nc][ns]
+            np_mag[nc][ns][0] = math.sqrt(
+                nd3_cs[3] ** 2 + nd3_cs[4] ** 2 + nd3_cs[5] ** 2)
+    return np_mag
+
 def _load_inputs_7():
     print("load raw data or feature data for 7 inputs")
     X_train, X_test = _load_inputs_6()
 
     print("prepare mag data on top of 3 existing data...")
-    nd3 = X_train
-    nc_len = len(nd3)
-    ns_len = len(nd3[0])
-    np_mag = np.zeros((nc_len, ns_len, 1))
-    for nc in range(0, nc_len):
-        for ns in range(0, ns_len):
-            nd3_cs = nd3[nc][ns]
-            np_mag[nc][ns][0] = math.sqrt(
-                nd3_cs[0] ** 2 + nd3_cs[1] ** 2 + nd3_cs[2] ** 2)
-
+    np_mag = _get_new_mag_body_feature(X_train)
     X_train = np.concatenate((X_train, np_mag), axis=2)
 
-    nd3 = X_test
-    nc_len = len(nd3)
-    ns_len = len(nd3[0])
-    np_mag = np.zeros((nc_len, ns_len, 1))
-    for nc in range(0, nc_len):
-        for ns in range(0, ns_len):
-            nd3_cs = nd3[nc][ns]
-            np_mag[nc][ns][0] = math.sqrt(
-                nd3_cs[0] ** 2 + nd3_cs[1] ** 2 + nd3_cs[2] ** 2)
+    np_mag = _get_new_mag_body_feature(X_test)
+    X_test = np.concatenate((X_test, np_mag), axis=2)
 
+    return X_train, X_test
+
+
+def _load_inputs_8():
+    print("load raw data or feature data for 7 inputs")
+    X_train, X_test = _load_inputs_6()
+
+    print("prepare mag data on top of 3 existing data...")
+    np_mag = _get_new_mag_body_feature(X_train)
+    X_train = np.concatenate((X_train, np_mag), axis=2)
+    np_mag = _get_new_mag_total_feature(X_train)
+    X_train = np.concatenate((X_train, np_mag), axis=2)
+
+    print("prepare mag data on top of 3 existing data...")
+    np_mag = _get_new_mag_body_feature(X_test)
+    X_test = np.concatenate((X_test, np_mag), axis=2)
+    np_mag = _get_new_mag_total_feature(X_test)
     X_test = np.concatenate((X_test, np_mag), axis=2)
 
     return X_train, X_test
@@ -207,6 +237,8 @@ def load_all():
             X_train, X_test = _load_inputs_6()
         elif inputs == 7:
             X_train, X_test = _load_inputs_7()
+        elif inputs == 8:
+            X_train, X_test = _load_inputs_8()
         else:
             X_train, X_test = _load_inputs_9()
 

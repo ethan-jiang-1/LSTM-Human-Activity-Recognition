@@ -85,6 +85,11 @@ def do_convert(inputs, step):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    inputs = 9
-    step = 100
+    if len(sys.argv) >= 3:
+        inputs = int(sys.argv[1])
+        step = int(sys.argv[2])
+    else:
+        inputs = 9
+        step = 100
+
     do_convert(inputs, step)
