@@ -70,7 +70,6 @@ inspect_data(X_train, X_test, y_train, y_test)
 # key data for model and training
 # LSTM Neural Network's internal structure
 m_hidden = 32 # Hidden layer num of features
-
 m_learning_rate = 0.0025
 m_lambda_loss_amount = 0.0015
 m_training_iters = n_training_data_count * 300  # Loop 300 times on the dataset

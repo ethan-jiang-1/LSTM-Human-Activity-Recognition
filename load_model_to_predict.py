@@ -7,7 +7,7 @@ import os
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-os.environ['DATA_INPUTS_NUM'] = '9'
+
 
 import tensorflow as tf
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red
@@ -26,13 +26,29 @@ logging.getLogger('tensorflow.core').disabled = True
 
 
 # load dataset from data_loader
-dh = load_all()
-X_train = dh.X_train
-X_test = dh.X_test
-y_train = dh.y_train
-y_test = dh.y_test
-LABELS = dh.LABELS
+X_train = None
+X_test = None
+y_train = None
+y_test = None
+LABELS = None
 
+n_classes = 6
+n_steps = 128
+n_input = 9
+
+def load_data_by_inputs(inputs):
+    global X_train, X_test, y_train, y_test, LABELS
+    global n_steps, n_input 
+    os.environ['DATA_INPUTS_NUM'] = str(inputs)
+    dh = load_all()
+    X_train = dh.X_train
+    X_test = dh.X_test
+    y_train = dh.y_train
+    y_test = dh.y_test
+    LABELS = dh.LABELS
+
+    n_steps = len(X_train[0])  # 128 timesteps per series
+    n_input = len(X_train[0][0])  # 9 input parameters per timestep
 
 def get_model_dir(inputs, step):
     return "model_save_{}_{}".format(inputs, step)
@@ -65,10 +81,6 @@ def do_load_model(model_dir):
         traceback.print_exc()
         return None, None
 
-
-n_classes = 6
-n_steps = len(X_train[0])  # 128 timesteps per series
-n_input = len(X_train[0][0])  # 9 input parameters per timestep
 
 def one_hot(y_, n_classes=n_classes):
     # Function to encode neural one-hot output labels from number indexes
@@ -170,12 +182,15 @@ def check_signature_def(sess, meta_graph_def):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    if len(sys.argv) >= 2:
-        model_dir = sys.argv[1]
+    if len(sys.argv) >= 3:
+        inputs = int(sys.argv[1])
+        step = int(sys.argv[2])
     else:
-        inputs = find_inputs_num()
+        inputs = 9
         step = 100
-        model_dir = get_model_dir(inputs, step)
+    
+    load_data_by_inputs(inputs)
+    model_dir = get_model_dir(inputs, step)
 
     sess, meta_info_def = do_load_model(model_dir)
     if check_graph(sess, meta_info_def):
