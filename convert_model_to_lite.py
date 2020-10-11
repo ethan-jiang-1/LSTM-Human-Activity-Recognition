@@ -92,6 +92,6 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
     else:
         inputs = default_inputs
         msstep = default_msstep
-    alter_defaults()
+    alter_defaults(inputs, msstep)
 
     do_convert(inputs, msstep)

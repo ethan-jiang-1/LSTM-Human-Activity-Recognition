@@ -2,7 +2,7 @@
 import os
 
 default_inputs = 6
-default_msstep = 100
+default_msstep = 500
 
 def update_env():
     print("update env, default_inputs: {} default_msstep: {}".format(default_inputs, default_msstep))
