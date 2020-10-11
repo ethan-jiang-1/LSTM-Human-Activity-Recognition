@@ -5,6 +5,6 @@ if got dll loading problem, try conda (assume the venv is p36), make a clean p36
 
 conda activate p36 
 conda install tensorflow==1.14.0
-conda install tensorflow-gpu=1.14.0 (if you have gpu)
+conda install tensorflow-gpu=1.14.0 (if you have gpu -- make sure read docs in tensorflow website to have all required installed)
 conda install matplotlib
 
