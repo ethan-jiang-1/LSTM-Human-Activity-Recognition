@@ -1,7 +1,10 @@
-using python 3.6
 
-pip install tensorflow==1.15.4
+Recommend to using conda
 
-if got dll loading problem, try conda 
+if got dll loading problem, try conda (assume the venv is p36), make a clean p36 enviroment 
 
+conda activate p36 
 conda install tensorflow==1.14.0
+conda install tensorflow-gpu=1.14.0 (if you have gpu)
+conda install matplotlib
+
