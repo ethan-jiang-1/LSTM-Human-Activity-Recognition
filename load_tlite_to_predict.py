@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
 
+from s_defaults import default_inputs, default_msstep, alter_defaults
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
@@ -78,12 +79,13 @@ def do_load_lite_predictor(model_path):
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
     if len(sys.argv) >= 3:
         inputs = int(sys.argv[1])
-        step = int(sys.argv[2])
+        msstep = int(sys.argv[2])
     else:
-        inputs = 9
-        step = 100
+        inputs = default_inputs
+        msstep = default_msstep
 
+    alter_defaults(inputs, msstep)
     load_data_by_inputs(inputs)
-    model_path = get_model_path(inputs, step)
+    model_path = get_model_path(inputs, msstep)
 
     do_load_lite_predictor(model_path)

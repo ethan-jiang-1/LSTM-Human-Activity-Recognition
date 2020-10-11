@@ -65,9 +65,9 @@ def convert_and_save(model_dir, saved_model_path):
     return False
 
 
-def do_convert(inputs, step):
-    dir_name = get_model_dir(inputs, step)
-    saved_model_path = get_model_path(inputs, step)    
+def do_convert(inputs, msstep):
+    dir_name = get_model_dir(inputs, msstep)
+    saved_model_path = get_model_path(inputs, msstep)    
     print("received model need to be converted model {} to {} ".format(dir_name, saved_model_path))
     try:
         if not os.path.isdir(dir_name):
@@ -85,11 +85,13 @@ def do_convert(inputs, step):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
+    from s_defaults import default_inputs, default_msstep, alter_defaults
     if len(sys.argv) >= 3:
         inputs = int(sys.argv[1])
-        step = int(sys.argv[2])
+        msstep = int(sys.argv[2])
     else:
-        inputs = 9
-        step = 100
+        inputs = default_inputs
+        msstep = default_msstep
+    alter_defaults()
 
-    do_convert(inputs, step)
+    do_convert(inputs, msstep)

@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # encoding:utf8
 
+from s_defaults import default_inputs, default_msstep  # , alter_defaults
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
 # 3 = INFO, WARNING, and ERROR messages are not printed
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
-os.environ['DATA_INPUTS_NUM'] = '9'
+
 
 from s_inspect import inspect_data
 from s_data_loader import load_all, find_inputs_num
@@ -60,7 +61,7 @@ tf.get_logger().setLevel(logging.ERROR)
 n_training_data_count = len(X_train)  # 7352 training series (with 50% overlap between each serie)
 n_test_data_count = len(X_test)  # 2947 testing series
 n_steps = len(X_train[0])  # 128 timesteps per series
-n_input = len(X_train[0][0])  # 9 input parameters per timestep
+n_input = len(X_train[0][0])  # 6/9 input parameters per timestep
 n_classes = 6 # Total classes (should go up, or should go down
 
 

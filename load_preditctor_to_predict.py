@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
 
+from s_defaults import default_inputs, default_msstep, alter_defaults
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
@@ -30,7 +31,7 @@ LABELS = None
 
 n_classes = 6
 n_steps = 128
-n_input = 9
+n_input = default_inputs
 
 
 def load_data_by_inputs(inputs):
@@ -242,13 +243,14 @@ def do_predict_test_one_X(smp):
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
     if len(sys.argv) >= 3:
         inputs = int(sys.argv[1])
-        step = int(sys.argv[2])
+        msstep = int(sys.argv[2])
     else:
-        inputs = 9
-        step = 100
+        inputs = default_inputs
+        msstep = default_msstep
+    alter_defaults(inputs, msstep)
 
     load_data_by_inputs(inputs)
-    model_dir = get_model_dir(inputs, step)
+    model_dir = get_model_dir(inputs, msstep)
 
     smp = do_load_predictor(model_dir)
     if smp is not None:
