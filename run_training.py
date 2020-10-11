@@ -26,7 +26,7 @@ print("import tf")
 import tensorflow as tf  # Version 1.0.0 (some previous versions are used in past commits)
 
 from s_save_model import SessModelSaver
-from s_save_pred import PredModelSaver
+from s_save_pred import PredModelSaver, PredResultSaver
 from s_graph import inspect_graph, get_summary_writer, add_summary
 from s_console_prompt import prompt_yellow, prompt_blue, prompt_green, prompt_red, prompt_progress
 
@@ -74,6 +74,8 @@ m_hidden = 32 # Hidden layer num of features
 m_learning_rate = 0.0025
 m_lambda_loss_amount = 0.0015
 m_training_iters = n_training_data_count * 300  # Loop 300 times on the dataset
+if len(list_gpu) > 0:
+    m_training_iters = n_training_data_count * 500  # Loop 300 times on the dataset
 m_batch_size = 1500
 m_display_iter = 30000  # To show test set accuracy during training
 
@@ -225,6 +227,11 @@ def save_model_pred(sess, step):
     return pms.save()
 
 
+def save_pred_result(sess, step, acc, loss, pred_test=None, y_test=None):
+    prs = PredResultSaver(sess, step, acc, loss, pred_test=pred_test, y_test=y_test, inputs=n_input)
+    return prs.save()
+
+
 def save_model_ses(sess, step):
     sms = SessModelSaver(sess, step, inputs=n_input)
     return sms.save()
@@ -274,6 +281,7 @@ while step * m_batch_size <= m_training_iters:
         test_losses.append(loss)
         test_accuracies.append(acc)
         prompt_blue("PERFORMANCE ON TEST SET: " + "Batch Loss = {} , Accuracy = {} @Step:{}".format(loss, acc, step))
+        save_pred_result(sess, step, acc, loss)
 
     step += 1
 
@@ -296,6 +304,10 @@ test_losses.append(final_loss)
 test_accuracies.append(final_accuracy)
 print("FINAL RESULT: " + "Batch Loss = {}".format(final_loss) + ", Accuracy = {}".format(final_accuracy))
 
+pred_test = one_hot_predictions.argmax(1)
+
+save_pred_result(sess, step, final_accuracy, final_loss, pred_test=pred_test, y_test=y_test)
+
 sess.close()
 
 
@@ -307,7 +319,6 @@ sess.close()
 # %%
 # (Inline plots: )
 # get_ipython().run_line_magic('matplotlib', 'inline')
-pred_test = one_hot_predictions.argmax(1)
 
 from s_plot import plot_traning, print_accuracy, plot_confusion
 plot_traning(m_batch_size, train_losses, train_accuracies, m_training_iters,
