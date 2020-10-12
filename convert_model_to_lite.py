@@ -26,17 +26,25 @@ def get_model_path(inputs, step):
     return "model_tflite/model_save_{}_{}.tflite".format(inputs, step)
 
 
-def find_converter(model_dir):
+def get_graphvis_dir(inputs, step):
+    gdir = "model_tflite/model_save_{}_{}_graphviz".format(inputs, step)
+    if not os.path.isdir(gdir):
+        os.mkdir(gdir)
+    return gdir
+
+
+def find_converter(model_dir, inputs, msstep):
 
     if not using_v2:
         print("Using V1 Converter")
         from tensorflow.lite.python.lite import TFLiteConverter as tfc
         # from xt_tf.xa_lite import TFLiteConverter as tfc
         converter = tfc.from_saved_model("./" + model_dir)
-        # converter.allow_custom_ops = True
+        converter.allow_custom_ops = False
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.target_spec.supported_types = [tf.float32]
-
+        # converter.dump_graphviz_dir = get_graphvis_dir(inputs, msstep)
+        # converter.dump_graphviz_video = True
     else:
         print("Using V2 Converter")
         tf.enable_eager_execution()
@@ -52,10 +60,10 @@ def find_converter(model_dir):
 
 # http://primo.ai/index.php?title=Converting_to_TensorFlow_Lite
 # Converting a SavedModel.
-def convert_and_save(model_dir, saved_model_path):
+def convert_and_save(model_dir, saved_model_path, inputs, msstep):
     print("try to convert {} to {} ".format(model_dir, saved_model_path))
 
-    converter = find_converter(model_dir)
+    converter = find_converter(model_dir, inputs, msstep)
     tflite_model = converter.convert()
 
     with open(saved_model_path, "wb") as file:
@@ -77,7 +85,7 @@ def do_convert(inputs, msstep):
         if not os.path.isdir("./model_tflite"):
             os.mkdir("./model_tflite")
 
-        return convert_and_save(dir_name, saved_model_path)
+        return convert_and_save(dir_name, saved_model_path, inputs, msstep)
     except Exception as ex:
         print("\n** Exception: {}".format(ex))
         traceback.print_exc()

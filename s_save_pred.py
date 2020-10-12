@@ -105,5 +105,4 @@ class PredResultSaver(object):
             prompt_red("\n\n**model pred {} failed to saved: {}".format(self.step, ex))
             with ConsoleColor(ConsoleColor.RED):
                 traceback.print_exc()
-        return False            
-
+        return False
