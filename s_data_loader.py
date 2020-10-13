@@ -1,9 +1,12 @@
 
 from math import sqrt # square root function
-from math import acos # inverse of cosinus function
+from math import acos
+from re import search # inverse of cosinus function
 import numpy as np
 import os
 import math
+
+from s_defaults import default_ssample, default_inputs
 
 INPUT_SIGNAL_TYPES_9 = [
     "body_acc_x_",
@@ -73,14 +76,18 @@ def load_X(X_signals_paths):
     for signal_type_path in X_signals_paths:
         file = open(signal_type_path, 'r')
         # Read dataset from disk, dealing with text files' syntax
+        series = [
+            row.replace('  ', ' ').strip().split(' ') for row in file
+        ]
+        if default_ssample != 128:
+            for i in range(0, len(series)):
+                series[i] = series[i][:default_ssample]
         X_signals.append(
-            [np.array(serie, dtype=np.float32) for serie in [
-                row.replace('  ', ' ').strip().split(' ') for row in file
-            ]]
+            [np.array(serie, dtype=np.float32) for serie in series]
         )
         file.close()
-    # x_signals np array: shape(6, 7352, 128)
-    # transpose to np as shape(7352, 128, 6)
+    # x_signals np array: shape(6, 7352, 128) default_ssample
+    # transpose to np as shape(7352, 128, 6) default_ssample
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
 
@@ -168,7 +175,7 @@ def _angle(vector1, vector2):
 
 def _get_new_mag_body_feature(X_):
     # print("shape of _X", X_.shape)
-    #shape of X_ (nc(1000+), ns(128), val(6 or 9))
+    #shape of X_ (nc(1000+), ns(default_ssample), val(default_inputs))
     nd3 = X_
     nc_len = len(nd3)
     ns_len = len(nd3[0])
@@ -195,7 +202,7 @@ def _get_new_mag_body_feature(X_):
 
 def _get_new_mag_total_feature(X_):
     # print("shape of _X", X_.shape)
-    #shape of X_ (nc(1000+), ns(128), val(6 or 9))
+    #shape of X_ (nc(1000+), ns(default_ssample), val(default_inputs))
     nd3 = X_
     nc_len = len(nd3)
     ns_len = len(nd3[0])
