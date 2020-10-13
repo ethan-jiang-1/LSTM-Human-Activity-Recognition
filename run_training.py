@@ -70,7 +70,7 @@ inspect_data(X_train, X_test, y_train, y_test)
 
 # key data for model and training
 # LSTM Neural Network's internal structure
-m_hidden = 32 # Hidden layer num of features
+m_hidden = 8 # Hidden layer num of features
 m_learning_rate = 0.0025
 m_lambda_loss_amount = 0.0015
 m_training_iters = n_training_data_count * 300  # Loop 300 times on the dataset
@@ -133,11 +133,23 @@ def LSTM_RNN(_X, _weights, _biases):
     # new shape: n_steps * (batch_size, m_hidden)
 
     # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-    lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
-    lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
-    lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
+    # lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
+    # lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
+    # lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
+    # # Get LSTM cell output
+    # outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)
+
+    # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
+    lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(
+        m_hidden, forget_bias=1.0, state_is_tuple=True)
+    #lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(
+    #    m_hidden, forget_bias=1.0, state_is_tuple=True)
+    #lstm_cells = tf.contrib.rnn.MultiRNNCell(
+    #    [lstm_cell_1, lstm_cell_2], state_is_tuple=True)
     # Get LSTM cell output
-    outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)
+    outputs, states = tf.contrib.rnn.static_rnn(
+        lstm_cell_1, _X, dtype=tf.float32)
+
 
     # Get last time step's output feature for a "many-to-one" style classifier, 
     # as in the image describing RNNs at the top of this page
@@ -257,7 +269,7 @@ while step * m_batch_size <= m_training_iters:
     train_accuracies.append(acc)
     
     # Evaluate network only at some steps for faster training: 
-    if (step*m_batch_size % m_display_iter == 0) or (step == 1) or (step * m_batch_size > m_training_iters):
+    if (step*m_batch_size % m_display_iter == 0) or (step == 1) or (step * m_batch_size > m_training_iters) or (step % 400 == 100):
         
         # To not spam console, show training accuracy/loss in this "if"
         print("Training iter #" + str(step*m_batch_size) + ":   Batch Loss = " + "{:.6f}".format(loss) + ", Accuracy = {}".format(acc))

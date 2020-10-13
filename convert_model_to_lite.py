@@ -41,8 +41,10 @@ def find_converter(model_dir, inputs, msstep):
         # from xt_tf.xa_lite import TFLiteConverter as tfc
         converter = tfc.from_saved_model("./" + model_dir)
         converter.allow_custom_ops = False
-        converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.target_spec.supported_types = [tf.float32]
+        # converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
+        # converter.target_spec.supported_types = [tf.float32]
+        converter.target_spec.supported_types = [tf.float16]
         # converter.dump_graphviz_dir = get_graphvis_dir(inputs, msstep)
         # converter.dump_graphviz_video = True
     else:
