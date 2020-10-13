@@ -2,7 +2,7 @@ import os
 
 default_inputs = 6
 default_msstep = 500
-default_ssample = 128 # 128 is the original data
+default_ssample = 32 # 128 # 128 is the original data
 
 def update_env():
     print("update env, default_inputs: {} default_msstep: {}".format(default_inputs, default_msstep))
