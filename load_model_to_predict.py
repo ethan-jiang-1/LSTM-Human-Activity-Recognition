@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
 
-from s_defaults import default_inputs, default_msstep, alter_defaults
+from s_defaults import default_inputs, default_model_save_iter, alter_defaults
 import os
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
@@ -188,7 +188,7 @@ if __name__ == '__main__':    # which model to load?  from model_save_XXX
         msstep = int(sys.argv[2])
     else:
         inputs = default_inputs
-        msstep = default_msstep
+        msstep = default_model_save_iter
 
     alter_defaults(inputs, msstep)
     

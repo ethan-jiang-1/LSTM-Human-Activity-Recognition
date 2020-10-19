@@ -6,7 +6,37 @@ import numpy as np
 import os
 import math
 
-from s_defaults import default_ssample, default_inputs
+from s_defaults import default_sample_num, default_inputs
+
+INPUT_SIGNAL_TYPES_6 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_"
+]
+
+INPUT_SIGNAL_TYPES_7 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_",
+    "body_acc_mag_"
+]
+
+INPUT_SIGNAL_TYPES_8 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_",
+    "???_1",
+    "???_2"
+]
 
 INPUT_SIGNAL_TYPES_9 = [
     "body_acc_x_",
@@ -15,15 +45,6 @@ INPUT_SIGNAL_TYPES_9 = [
     "body_gyro_x_",
     "body_gyro_y_",
     "body_gyro_z_",
-    "total_acc_x_",
-    "total_acc_y_",
-    "total_acc_z_"
-]
-
-INPUT_SIGNAL_TYPES_6 = [
-    "body_acc_x_",
-    "body_acc_y_",
-    "body_acc_z_",
     "total_acc_x_",
     "total_acc_y_",
     "total_acc_z_"
@@ -79,15 +100,15 @@ def load_X(X_signals_paths):
         series = [
             row.replace('  ', ' ').strip().split(' ') for row in file
         ]
-        if default_ssample != 128:
+        if default_sample_num != 128:
             for i in range(0, len(series)):
-                series[i] = series[i][:default_ssample]
+                series[i] = series[i][:default_sample_num]
         X_signals.append(
             [np.array(serie, dtype=np.float32) for serie in series]
         )
         file.close()
-    # x_signals np array: shape(6, 7352, 128) default_ssample
-    # transpose to np as shape(7352, 128, 6) default_ssample
+    # x_signals np array: shape(6, 7352, 128) default_sample_num
+    # transpose to np as shape(7352, 128, 6) default_sample_num
     return np.transpose(np.array(X_signals), (1, 2, 0))
 
 
@@ -175,7 +196,7 @@ def _angle(vector1, vector2):
 
 def _get_new_mag_body_feature(X_):
     # print("shape of _X", X_.shape)
-    #shape of X_ (nc(1000+), ns(default_ssample), val(default_inputs))
+    #shape of X_ (nc(1000+), ns(default_sample_num), val(default_inputs))
     nd3 = X_
     nc_len = len(nd3)
     ns_len = len(nd3[0])
@@ -202,7 +223,7 @@ def _get_new_mag_body_feature(X_):
 
 def _get_new_mag_total_feature(X_):
     # print("shape of _X", X_.shape)
-    #shape of X_ (nc(1000+), ns(default_ssample), val(default_inputs))
+    #shape of X_ (nc(1000+), ns(default_sample_num), val(default_inputs))
     nd3 = X_
     nc_len = len(nd3)
     ns_len = len(nd3[0])
@@ -215,15 +236,6 @@ def _get_new_mag_total_feature(X_):
     return np_mag
 
 
-INPUT_SIGNAL_TYPES_7 = [
-    "body_acc_x_",
-    "body_acc_y_",
-    "body_acc_z_",
-    "total_acc_x_",
-    "total_acc_y_",
-    "total_acc_z_",
-    "body_acc_mag_"
-]
 def _load_inputs_7():
     print("load raw data or feature data for 7 inputs")
     X_train, X_test = _load_inputs_6()
@@ -236,17 +248,6 @@ def _load_inputs_7():
     X_test = np.concatenate((X_test, np_mag), axis=2)
 
     return X_train, X_test
-
-INPUT_SIGNAL_TYPES_8 = [
-    "body_acc_x_",
-    "body_acc_y_",
-    "body_acc_z_",
-    "total_acc_x_",
-    "total_acc_y_",
-    "total_acc_z_",
-    "body_acc_mag_",
-    "body_acc_angle_"
-]
 
 def _load_inputs_8A():
     global INPUT_SIGNAL_TYPES_8
@@ -275,6 +276,7 @@ def _load_inputs_8A():
     return X_train, X_test
 
 def _load_inputs_8B():
+    global INPUT_SIGNAL_TYPES_8
     INPUT_SIGNAL_TYPES_8 = [
         "body_acc_y_",
         "body_acc_z_",
@@ -300,6 +302,7 @@ def _load_inputs_8B():
 
 
 def _load_inputs_8C():
+    global INPUT_SIGNAL_TYPES_8
     INPUT_SIGNAL_TYPES_8 = [
         "body_acc_y_",
         "body_acc_z_",
@@ -383,4 +386,3 @@ def get_input_names(inputs=default_inputs):
     elif inputs == 9:
         return INPUT_SIGNAL_TYPES_9
     return []
-

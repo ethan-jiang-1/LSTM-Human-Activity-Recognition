@@ -95,13 +95,13 @@ def do_convert(inputs, msstep):
 
 
 if __name__ == '__main__':    # which model to load?  from model_save_XXX
-    from s_defaults import default_inputs, default_msstep, alter_defaults
+    from s_defaults import default_inputs, default_model_save_iter, alter_defaults
     if len(sys.argv) >= 3:
         inputs = int(sys.argv[1])
         msstep = int(sys.argv[2])
     else:
         inputs = default_inputs
-        msstep = default_msstep
+        msstep = default_model_save_iter
     alter_defaults(inputs, msstep)
 
     do_convert(inputs, msstep)

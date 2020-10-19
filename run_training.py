@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
 import os
-from s_defaults import default_inputs, default_msstep, has_flag
+from s_defaults import default_inputs, default_model_save_iter, has_flag
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
