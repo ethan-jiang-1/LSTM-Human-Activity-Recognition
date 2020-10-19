@@ -3,18 +3,18 @@ import os
 # two parameters can be used to select input and iter for saving model
 # saving model are named as mode_save_{input}_{msstep} in its own subfolder
 #
-default_inputs = 9
+default_inputs = 6
 default_model_save_iter = 500
 
 default_sample_num = 128  # 128 is the original data
 
 flags = []
 
-#flags.append("SAMPLE_NUM_32")
-#flags.append("SAMPLE_NUM_64")
-flags.append("SAMPLE_NUM_128")
-#flags.append("LTSM_LAYER_1")
-flags.append("LTSM_LAYER_2")
+flags.append("SAMPLE_NUM_32")
+# flags.append("SAMPLE_NUM_64")
+# flags.append("SAMPLE_NUM_128")
+flags.append("LTSM_LAYER_1")
+# flags.append("LTSM_LAYER_2")
 
 def has_flag(flag):
     if flag in flags:
