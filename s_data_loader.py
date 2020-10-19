@@ -214,6 +214,16 @@ def _get_new_mag_total_feature(X_):
                 nd3_cs[3] ** 2 + nd3_cs[4] ** 2 + nd3_cs[5] ** 2)
     return np_mag
 
+
+INPUT_SIGNAL_TYPES_7 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_",
+    "body_acc_mag_"
+]
 def _load_inputs_7():
     print("load raw data or feature data for 7 inputs")
     X_train, X_test = _load_inputs_6()
@@ -227,8 +237,29 @@ def _load_inputs_7():
 
     return X_train, X_test
 
+INPUT_SIGNAL_TYPES_8 = [
+    "body_acc_x_",
+    "body_acc_y_",
+    "body_acc_z_",
+    "total_acc_x_",
+    "total_acc_y_",
+    "total_acc_z_",
+    "body_acc_mag_",
+    "body_acc_angle_"
+]
 
 def _load_inputs_8A():
+    global INPUT_SIGNAL_TYPES_8
+    INPUT_SIGNAL_TYPES_8 = [
+        "body_acc_y_",
+        "body_acc_z_",
+        "total_acc_x_",
+        "total_acc_y_",
+        "total_acc_z_",
+        "body_acc_mag_",
+        "body_acc_angle_"
+    ]
+
     print("load raw data or feature data for 8A inputs: 6 orgin plus mag and angle")
     X_train, X_test = _load_inputs_6()
 
@@ -244,6 +275,15 @@ def _load_inputs_8A():
     return X_train, X_test
 
 def _load_inputs_8B():
+    INPUT_SIGNAL_TYPES_8 = [
+        "body_acc_y_",
+        "body_acc_z_",
+        "total_acc_x_",
+        "total_acc_y_",
+        "total_acc_z_",
+        "body_acc_mag_",
+        "body_acc_jerk_"
+    ]
     print("load raw data or feature data for 8B inputs: 6 orgin plus mag and jerk")
     X_train, X_test = _load_inputs_6()
 
@@ -260,6 +300,15 @@ def _load_inputs_8B():
 
 
 def _load_inputs_8C():
+    INPUT_SIGNAL_TYPES_8 = [
+        "body_acc_y_",
+        "body_acc_z_",
+        "total_acc_x_",
+        "total_acc_y_",
+        "total_acc_z_",
+        "body_acc_mag_",
+        "total_acc_mag_"
+    ]    
     print("load raw data or feature data for 8C inputs: 6 orgin plus two mag")
     X_train, X_test = _load_inputs_6()
 
@@ -322,3 +371,16 @@ def load_all():
         loaded = True
 
     return DataHolder(X_train, X_test, y_train, y_test)
+
+
+def get_input_names(inputs=default_inputs):
+    if inputs == 6:
+        return INPUT_SIGNAL_TYPES_6
+    elif inputs == 7:
+        return INPUT_SIGNAL_TYPES_7
+    elif inputs == 8:
+        return INPUT_SIGNAL_TYPES_8
+    elif inputs == 9:
+        return INPUT_SIGNAL_TYPES_9
+    return []
+

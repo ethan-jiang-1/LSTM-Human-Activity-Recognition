@@ -4,9 +4,13 @@ from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import matplotlib
 from sklearn import metrics
+from s_data_loader import get_input_names
 
 
 def plot_confusion(pred_test, y_test, labels):
+    names = get_input_names()
+    print("Inputs ", names)
+
     print(classification_report(pred_test, y_test, target_names=[lb for lb in labels]))
     conf_mat = confusion_matrix(pred_test, y_test)
 

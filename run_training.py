@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # encoding:utf8
-
-from s_defaults import default_inputs, default_msstep  # , alter_defaults
 import os
+from s_defaults import default_inputs, default_msstep, has_flag
 # 0 = all messages are logged (default behavior)
 # 1 = INFO messages are not printed
 # 2 = INFO and WARNING messages are not printed
@@ -132,24 +131,24 @@ def LSTM_RNN(_X, _weights, _biases):
     _X = tf.split(_X, n_steps, 0) 
     # new shape: n_steps * (batch_size, m_hidden)
 
-    # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-    # lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
-    # lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
-    # lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
-    # # Get LSTM cell output
-    # outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)
-
-    # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-    lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(
-        m_hidden, forget_bias=1.0, state_is_tuple=True)
-    #lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(
-    #    m_hidden, forget_bias=1.0, state_is_tuple=True)
-    #lstm_cells = tf.contrib.rnn.MultiRNNCell(
-    #    [lstm_cell_1, lstm_cell_2], state_is_tuple=True)
-    # Get LSTM cell output
-    outputs, states = tf.contrib.rnn.static_rnn(
-        lstm_cell_1, _X, dtype=tf.float32)
-
+    if has_flag("LTSM_LAYER_1"):
+        # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
+        lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(
+            m_hidden, forget_bias=1.0, state_is_tuple=True)
+        #lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(
+        #    m_hidden, forget_bias=1.0, state_is_tuple=True)
+        #lstm_cells = tf.contrib.rnn.MultiRNNCell(
+        #    [lstm_cell_1, lstm_cell_2], state_is_tuple=True)
+        # Get LSTM cell output
+        outputs, states = tf.contrib.rnn.static_rnn(
+            lstm_cell_1, _X, dtype=tf.float32)
+    else:
+        # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
+        lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
+        lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(m_hidden, forget_bias=1.0, state_is_tuple=True)
+        lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
+        # # Get LSTM cell output
+        outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)
 
     # Get last time step's output feature for a "many-to-one" style classifier, 
     # as in the image describing RNNs at the top of this page
