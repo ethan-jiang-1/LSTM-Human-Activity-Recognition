@@ -5,8 +5,10 @@
 from inspect import signature
 from operator import truediv
 import os
+from s_console_prompt import prompt_green, prompt_yellow
 import traceback
 import sys
+from IPython import display
 
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import signature_def_utils
@@ -36,7 +38,7 @@ def get_graphvis_dir(inputs, step):
 def find_converter(model_dir, inputs, msstep):
 
     if not using_v2:
-        print("Using V1 Converter")
+        prompt_green("Using V1 Converter")
         from tensorflow.lite.python.lite import TFLiteConverter as tfc
         # from xt_tf.xa_lite import TFLiteConverter as tfc
         converter = tfc.from_saved_model("./" + model_dir)
@@ -44,11 +46,11 @@ def find_converter(model_dir, inputs, msstep):
         # converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
         # converter.target_spec.supported_types = [tf.float32]
-        converter.target_spec.supported_types = [tf.float16]
+        # converter.target_spec.supported_types = [tf.float16]
         # converter.dump_graphviz_dir = get_graphvis_dir(inputs, msstep)
         # converter.dump_graphviz_video = True
     else:
-        print("Using V2 Converter")
+        prompt_green("Using V2 Converter")
         tf.enable_eager_execution()
         from tensorflow.lite.python.lite import TFLiteConverterV2 as tfc
         # from xt_tf.xa_lite import TFLiteConverterV2 as tfc
@@ -58,6 +60,9 @@ def find_converter(model_dir, inputs, msstep):
         converter = tfc.from_saved_model(
             "./" + model_dir, tags=tags, signature_keys=signature_keys)
 
+    print("")
+    prompt_yellow(converter)
+    print("")
     return converter
 
 # http://primo.ai/index.php?title=Converting_to_TensorFlow_Lite
