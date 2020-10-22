@@ -9,6 +9,7 @@ from s_console_prompt import prompt_green, prompt_yellow
 import traceback
 import sys
 from IPython import display
+import numpy as np
 
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import signature_def_utils
@@ -35,6 +36,25 @@ def get_graphvis_dir(inputs, step):
     return gdir
 
 
+num_calibration_steps = 50
+dh = None
+def representative_dataset_gen():
+    global dh
+    if dh is None:
+        from s_data_loader import load_all
+        dh = load_all()
+
+    i = 0
+    while(i < num_calibration_steps):
+        dataset =[]
+        dataset.append(dh.X_train[i])
+        dataIn = np.array(dataset)
+        dataOut = np.array(dh.y_train[i])
+        print(i, dataIn.shape, dataOut.shape)
+        i += 1
+        yield [dataIn]
+
+
 def find_converter(model_dir, inputs, msstep):
 
     if not using_v2:
@@ -46,9 +66,15 @@ def find_converter(model_dir, inputs, msstep):
         # converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
         # converter.target_spec.supported_types = [tf.float32]
-        # converter.target_spec.supported_types = [tf.float16]
+        # converter.target_spec.supported_types = [tf.int8]
         # converter.dump_graphviz_dir = get_graphvis_dir(inputs, msstep)
         # converter.dump_graphviz_video = True
+        converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+        # converter.target_spec.supported_ops = [
+        #     tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+        converter.representative_dataset = tf.lite.RepresentativeDataset(
+            representative_dataset_gen)
+        # converter.allow_custom_ops = True
     else:
         prompt_green("Using V2 Converter")
         tf.enable_eager_execution()
@@ -59,7 +85,13 @@ def find_converter(model_dir, inputs, msstep):
             signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
         converter = tfc.from_saved_model(
             "./" + model_dir, tags=tags, signature_keys=signature_keys)
-
+        # converter.optimizations = [tf.lite.Optimize.DEFAULT]
+        converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
+        converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+        # converter.target_spec.supported_ops = [
+        #     tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+        converter.representative_dataset = tf.lite.RepresentativeDataset(
+            representative_dataset_gen)
     print("")
     prompt_yellow(converter)
     print("")
