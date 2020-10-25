@@ -133,19 +133,17 @@ def LSTM_RNN(_X, _weights, _biases):
 
     if has_flag("LTSM_LAYER_1"):
         # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-        lstm_cell_1 = tf.contrib.rnn.BasicRNNCell(
-            m_hidden)
+        lstm_cell_1 = tf.contrib.rnn.BasicRNNCell(m_hidden) #, forget_bias=1.0, state_is_tuple=True)
         #lstm_cell_2 = tf.contrib.rnn.BasicRNNCell(
         #    m_hidden, forget_bias=1.0, state_is_tuple=True)
         #lstm_cells = tf.contrib.rnn.MultiRNNCell(
         #    [lstm_cell_1, lstm_cell_2], state_is_tuple=True)
         # Get LSTM cell output
-        outputs, states = tf.contrib.rnn.static_rnn(
-            lstm_cell_1, _X, dtype=tf.float32)
+        outputs, states = tf.contrib.rnn.static_rnn(lstm_cell_1, _X, dtype=tf.float32)
     else:
         # Define two stacked LSTM cells (two recurrent layers deep) with tensorflow
-        lstm_cell_1 = tf.contrib.rnn.BasicRNNCell(m_hidden)
-        lstm_cell_2 = tf.contrib.rnn.BasicRNNCell(m_hidden)
+        lstm_cell_1 = tf.contrib.rnn.BasicRNNCell(m_hidden) # , forget_bias=1.0, state_is_tuple=True)
+        lstm_cell_2 = tf.contrib.rnn.BasicRNNCell(m_hidden) # , forget_bias=1.0, state_is_tuple=True)
         lstm_cells = tf.contrib.rnn.MultiRNNCell([lstm_cell_1, lstm_cell_2], state_is_tuple=True)
         # # Get LSTM cell output
         outputs, states = tf.contrib.rnn.static_rnn(lstm_cells, _X, dtype=tf.float32)

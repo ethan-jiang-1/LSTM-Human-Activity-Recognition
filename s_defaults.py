@@ -10,12 +10,12 @@ default_sample_num = 128  # 128 is the original data
 
 flags = []
 
-#flags.append("SAMPLE_NUM_32")
+flags.append("SAMPLE_NUM_32")
 #flags.append("SAMPLE_NUM_64")
-flags.append("SAMPLE_NUM_128")
+#flags.append("SAMPLE_NUM_128")
 
-#flags.append("LTSM_LAYER_1")
-flags.append("LTSM_LAYER_2")
+flags.append("LTSM_LAYER_1")
+#flags.append("LTSM_LAYER_2")
 
 def has_flag(flag):
     if flag in flags:
